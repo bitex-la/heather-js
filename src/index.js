@@ -1,11 +1,17 @@
 import axios from 'axios';
 
-export function define(model_name, model_structure){
+export function build_request(){
+  const headers = {
+    'Content-Type': 'application/vnd.api+json'
+  }
 
+  return {
+    headers
+  }
 }
 
 const Client = {
-    define
+  build_request
 };
 
 export default Client;
