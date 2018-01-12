@@ -36,7 +36,7 @@ describe('jsonapi-client', function(){
 
   it('should send a PATCH request on update', () => {
     const client = new JsonApiClient('http://anyapi.com');
-    const request = client.update();
+    const request = client.update({});
     expect(request.method).to.equal('PATCH');
   })
 
@@ -62,7 +62,22 @@ describe('jsonapi-client', function(){
     const puppy = new Dog(1, 2);
 
     const client = new JsonApiClient('http://anyapi.com');
-    const request = client.update(puppy, 'dog');
+    const request = client.update(puppy, 'dogs');
+
+    expect(request.data.data).to.eql({
+      type: 'dogs',
+      id: 1,
+      attributes: {
+        age: 2
+      }
+    });
+  })
+
+  it('should infer the type if no explicit type isprovided', () => {
+    const puppy = new Dog(1, 2);
+
+    const client = new JsonApiClient('http://anyapi.com');
+    const request = client.update(puppy);
 
     expect(request.data.data).to.eql({
       type: 'dog',

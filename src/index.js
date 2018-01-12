@@ -29,7 +29,7 @@ export default class Client {
   build_data(resource, type){
     let result = minimum_data;
 
-    if (type) result.data.type = type;
+    result.data.type = type || resource.constructor.name.toLowerCase();
 
     if (resource) {
       result.data.id = resource.id;
