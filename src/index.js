@@ -1,4 +1,5 @@
 import axios from 'axios';
+import _ from 'lodash';
 
 const minimum_data = { data: {} };
 
@@ -34,12 +35,9 @@ export default class Client {
       result.data.id = resource.id;
       result.data.attributes = {};
 
-      for (let property in resource) {
-        // we need to check this to avoid prototype properties to be included
-        if (property !== 'id' && resource.hasOwnProperty(property)) {
-          result.data.attributes[property] = resource[property];
-        }
-      }
+      _.forOwn(resource, (value, property) => {
+        if(property !== 'id') result.data.attributes[property] = value;
+      });
     }
     return result;
   }
