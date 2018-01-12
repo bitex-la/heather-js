@@ -1,6 +1,13 @@
 import { expect } from 'chai';
 import JsonApiClient from '../src';
 
+class Dog {
+  constructor(id, age){
+    this.id = id
+    this.age = age
+  }
+}
+
 describe('jsonapi-client', function(){
   it('should send the correct Content-Type header', () => {
     const client = new JsonApiClient();
@@ -43,5 +50,26 @@ describe('jsonapi-client', function(){
     const client = new JsonApiClient('http://anyapi.com');
     const request = client.delete();
     expect(request.method).to.equal('DELETE');
+  })
+
+  it('should always send a data attribute', () => {
+    const client = new JsonApiClient('http://anyapi.com');
+    const request = client.build_request();
+    expect(request.data).to.have.property('data');
+  })
+
+  it('should parse an object into the data as a resource', () => {
+    const puppy = new Dog(1, 2);
+
+    const client = new JsonApiClient('http://anyapi.com');
+    const request = client.update(puppy, 'dog');
+
+    expect(request.data.data).to.eql({
+      type: 'dog',
+      id: 1,
+      attributes: {
+        age: 2
+      }
+    });
   })
 })
