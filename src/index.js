@@ -8,7 +8,7 @@ export default class Client {
     this.baseURL = baseURL;
   }
 
-  build_request(method, data){
+  build_request(method, data, meta){
     const headers = this.build_headers();
     data = data || minimum_data
 
@@ -16,7 +16,8 @@ export default class Client {
       baseURL: this.baseURL,
       method,
       headers,
-      data
+      data,
+      meta
     }
   }
 
@@ -42,8 +43,9 @@ export default class Client {
     return result;
   }
 
-  find(){
-    return this.build_request('GET');
+  find(type, id, meta){
+    const data = this.build_data({ id }, type)
+    return this.build_request('GET', data, meta);
   }
 
   findAll(){

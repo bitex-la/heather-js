@@ -73,7 +73,7 @@ describe('jsonapi-client', function(){
     });
   })
 
-  it('should infer the type if no explicit type isprovided', () => {
+  it('should infer the type if no explicit type is provided', () => {
     const puppy = new Dog(1, 2);
 
     const client = new JsonApiClient('http://anyapi.com');
@@ -85,6 +85,17 @@ describe('jsonapi-client', function(){
       attributes: {
         age: 2
       }
+    });
+  })
+
+  it('should allow meta data', () => {
+    const puppy = new Dog(1, 2);
+
+    const client = new JsonApiClient('http://anyapi.com');
+    const request = client.find('dog', 1, {meta_field: 'meta_value'});
+
+    expect(request.meta).to.eql({
+      meta_field: 'meta_value'
     });
   })
 })
