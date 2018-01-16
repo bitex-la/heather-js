@@ -77,7 +77,7 @@ describe('jsonapi-client', function(){
     const puppy = new Dog(1, 2);
 
     const client = new JsonApiClient('http://anyapi.com')
-    const request = client.build_request_update({resource: puppy, type: 'dog'})
+    const request = client.build_request_update({resource: puppy})
 
     expect(request.data.data).to.eql({
       type: 'dog',
