@@ -44,7 +44,7 @@ export default class Client {
     return result
   }
 
-  build_request_find(type, id, meta){
+  build_request_find({type, id, meta} = {}){
     const data = this.build_data({ id }, type)
     return this.build_request('GET', data, meta);
   }

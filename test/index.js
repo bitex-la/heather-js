@@ -92,7 +92,7 @@ describe('jsonapi-client', function(){
     const puppy = new Dog(1, 2);
 
     const client = new JsonApiClient('http://anyapi.com');
-    const request = client.build_request_find('dog', 1, {meta_field: 'meta_value'});
+    const request = client.build_request_find({type: 'dog', id: 1, meta: {meta_field: 'meta_value'}});
 
     expect(request.meta).to.eql({
       meta_field: 'meta_value'
