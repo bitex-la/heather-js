@@ -8,10 +8,8 @@ export default class Client {
     this.base_url = base_url
   }
 
-  build_request(method, data, meta){
+  build_request({ method = '', data = minimum_data, meta = {} } = {}){
     const headers = this.build_headers()
-
-    data = data || minimum_data
 
     return {
       base_url: this.base_url,
@@ -28,7 +26,7 @@ export default class Client {
     }
   }
 
-  build_data(resource, type){
+  build_data({ resource, type }){
     let result = minimum_data
 
     result.data.type = type || resource.constructor.name.toLowerCase()
@@ -44,28 +42,31 @@ export default class Client {
     return result
   }
 
-  build_request_find({type, id, meta} = {}){
-    const data = this.build_data({ id }, type)
-    return this.build_request('GET', data, meta);
+  build_request_find({type, id = 0, meta} = {}){
+    const resource = { id }
+    const data = this.build_data({ resource, type })
+    return this.build_request({method: 'GET', data, meta})
   }
 
   build_request_find_all(){
-    return this.build_request('GET')
+    return this.build_request({method: 'GET'})
   }
 
   build_request_update({ resource, type }){
-    const data = this.build_data(resource, type)
-    return this.build_request('PATCH', data)
+    const data = this.build_data({resource, type})
+    return this.build_request({method: 'PATCH', data})
   }
 
   build_request_create(){
-    return this.build_request('POST')
+    return this.build_request({method: 'POST'})
   }
 
   build_request_delete(){
-    return this.build_request('DELETE')
+    return this.build_request({method: 'DELETE'})
   }
 
+  // This was split into the method and a build method to be able to test the
+  // requests without mocking the network
   find(params){
     return axios(this.build_request_find(params))
   }
