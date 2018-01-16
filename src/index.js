@@ -1,19 +1,20 @@
-import axios from 'axios';
-import _ from 'lodash';
+import axios from 'axios'
+import _ from 'lodash'
 
-const minimum_data = { data: {} };
+const minimum_data = { data: {} }
 
 export default class Client {
-  constructor(baseURL){
-    this.baseURL = baseURL;
+  constructor(base_url){
+    this.base_url = base_url
   }
 
   build_request(method, data, meta){
-    const headers = this.build_headers();
+    const headers = this.build_headers()
+
     data = data || minimum_data
 
     return {
-      baseURL: this.baseURL,
+      base_url: this.base_url,
       method,
       headers,
       data,
@@ -28,40 +29,60 @@ export default class Client {
   }
 
   build_data(resource, type){
-    let result = minimum_data;
+    let result = minimum_data
 
-    result.data.type = type || resource.constructor.name.toLowerCase();
+    result.data.type = type || resource.constructor.name.toLowerCase()
 
     if (resource) {
-      result.data.id = resource.id;
-      result.data.attributes = {};
+      result.data.id = resource.id
+      result.data.attributes = {}
 
       _.forOwn(resource, (value, property) => {
-        if(property !== 'id') result.data.attributes[property] = value;
-      });
+        if(property !== 'id') result.data.attributes[property] = value
+      })
     }
-    return result;
+    return result
   }
 
-  find(type, id, meta){
+  build_request_find(type, id, meta){
     const data = this.build_data({ id }, type)
     return this.build_request('GET', data, meta);
   }
 
-  findAll(){
-    return this.build_request('GET');
+  build_request_find_all(){
+    return this.build_request('GET')
   }
 
-  update(resource, type){
-    const data = this.build_data(resource, type);
-    return this.build_request('PATCH', data);
+  build_request_update({ resource, type }){
+    const data = this.build_data(resource, type)
+    return this.build_request('PATCH', data)
   }
 
-  create(){
-    return this.build_request('POST');
+  build_request_create(){
+    return this.build_request('POST')
   }
 
-  delete(){
-    return this.build_request('DELETE');
+  build_request_delete(){
+    return this.build_request('DELETE')
+  }
+
+  find(params){
+    return axios(this.build_request_find(params))
+  }
+
+  find_all(params){
+    return axios(this.build_request_find_all(params))
+  }
+
+  update(params){
+    return axios(this.build_request_update(params))
+  }
+
+  create(params){
+    return axios(this.build_request_create(params))
+  }
+
+  delete(params){
+    return axios(this.build_request_delete(params))
   }
 }
