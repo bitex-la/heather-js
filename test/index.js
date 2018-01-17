@@ -9,13 +9,19 @@ class Dog {
 }
 
 describe('jsonapi-client', function(){
-  let client, puppy, dog_response
+  let client, puppy, dog_response, dog_response_without_type
 
   beforeEach(() => {
     client = new JsonApiClient('http://anyapi.com')
     puppy = new Dog(1, 2)
     dog_response = {
       type: 'dog',
+      id: 1,
+      attributes: {
+        age: 2
+      }
+    }
+    dog_response_without_type = {
       id: 1,
       attributes: {
         age: 2
@@ -100,8 +106,18 @@ describe('jsonapi-client', function(){
   })
 
   it('should parse an object with a given class', () => {
-    const received_dog = client.deserialize(dog_response, Dog);
+    const received_dog = client.deserialize(dog_response_without_type, Dog);
 
     expect(received_dog).to.eql(puppy);
+  })
+
+  it('should parse an object without class', () => {
+    const received_dog = client.deserialize(dog_response);
+
+    expect(received_dog).to.eql({
+      type: 'dog',
+      id: 1,
+      age: 2
+    });
   })
 })

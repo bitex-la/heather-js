@@ -88,8 +88,12 @@ export default class Client {
   }
 
   deserialize(data, klass){
-    klass = klass || _.capitalize(data.type)
-    let obj = new klass()
+    let obj;
+    if(klass) {
+      obj = new klass()
+    } else {
+      obj = {type: data.type}
+    }
     obj.id = data.id
     _.forEach(data.attributes, (value, key) => {
       obj[key] = value;
