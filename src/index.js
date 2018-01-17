@@ -86,4 +86,15 @@ export default class Client {
   delete(params){
     return axios(this.build_request_delete(params))
   }
+
+  deserialize(data, klass){
+    klass = klass || _.capitalize(data.type)
+    let obj = new klass()
+    obj.id = data.id
+    _.forEach(data.attributes, (value, key) => {
+      obj[key] = value;
+    })
+
+    return obj
+  }
 }
