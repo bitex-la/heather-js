@@ -17,10 +17,13 @@ class Cat {
 }
 
 describe('jsonapi-client', function(){
-  let client, puppy, puppy2, kitten, dog_response, dog_response_without_type, dogs_response
+  let client
+  let puppy, puppy2, kitten
+  let dog_response, dog_response_without_type, dogs_response, cat_response
 
   beforeEach(() => {
     client = new JsonApiClient('http://anyapi.com')
+
     puppy = new Dog(1, 2)
     puppy2 = new Dog(2, 3)
     dog_response = {
@@ -53,6 +56,14 @@ describe('jsonapi-client', function(){
       }
     ]
     kitten = new Cat(1, 2, puppy)
+    cat_response = {
+      type: 'cat',
+      id: 1,
+      attributes: {
+        age: 2,
+        color: 'white'
+      }
+    }
   })
 
   it('should send the correct Content-Type header', () => {
@@ -163,5 +174,11 @@ describe('jsonapi-client', function(){
         age: 2
       }
     });
+  })
+
+  it('should deserialize only whitelisted attributes if specified', () => {
+    const received_cat = client.deserialize(cat_response, Cat, {attributes: ['age']});
+
+    expect(received_cat).to.eql(new Cat(1, 2));
   })
 })

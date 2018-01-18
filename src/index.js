@@ -32,13 +32,13 @@ export default class Client {
     result.data.type = type || resource.constructor.name.toLowerCase()
 
     if (resource) {
-      if(resource.id) {
+      if (resource.id) {
         result.data.id = resource.id
       }
       result.data.attributes = {}
 
       _.forOwn(resource, (value, property) => {
-        if(property !== 'id' && (_.isEmpty(attributes) || _.includes(attributes, property))) {
+        if (property !== 'id' && (_.isEmpty(attributes) || _.includes(attributes, property))) {
           result.data.attributes[property] = value
         }
       })
@@ -126,16 +126,19 @@ export default class Client {
     return axios(request)
   }
 
-  deserialize(data, klass){
+  deserialize(data, klass, params = {}){
     let obj;
-    if(klass) {
+    if (klass) {
       obj = new klass()
     } else {
       obj = {type: data.type}
     }
     obj.id = data.id
+
     _.forEach(data.attributes, (value, key) => {
-      obj[key] = value;
+      if(!params.attributes || _.includes(params.attributes, key)) {
+        obj[key] = value;
+      }
     })
 
     return obj
