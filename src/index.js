@@ -26,7 +26,7 @@ export default class Client {
     }
   }
 
-  build_data({ resource, type }){
+  build_data({ resource, type, attributes = [] }){
     let result = minimum_data
 
     result.data.type = type || resource.constructor.name.toLowerCase()
@@ -38,7 +38,9 @@ export default class Client {
       result.data.attributes = {}
 
       _.forOwn(resource, (value, property) => {
-        if(property !== 'id') result.data.attributes[property] = value
+        if(property !== 'id' && (_.isEmpty(attributes) || _.includes(attributes, property))) {
+          result.data.attributes[property] = value
+        }
       })
     }
     return result
@@ -54,12 +56,12 @@ export default class Client {
     return this.build_request({method: 'GET'})
   }
 
-  build_request_update({ resource, type }){
-    const data = this.build_data({resource, type})
+  build_request_update({ resource, type, attributes }){
+    const data = this.build_data({resource, type, attributes})
     return this.build_request({method: 'PATCH', data})
   }
 
-  build_request_create({ resource, type }){
+  build_request_create({ resource, type, attributes }){
     return this.build_request({method: 'POST'})
   }
 

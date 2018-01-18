@@ -8,8 +8,16 @@ class Dog {
   }
 }
 
+class Cat {
+  constructor(id, age, friend){
+    this.id = id
+    this.age = age
+    this.friend = friend
+  }
+}
+
 describe('jsonapi-client', function(){
-  let client, puppy, puppy2, dog_response, dog_response_without_type, dogs_response
+  let client, puppy, puppy2, kitten, dog_response, dog_response_without_type, dogs_response
 
   beforeEach(() => {
     client = new JsonApiClient('http://anyapi.com')
@@ -44,6 +52,7 @@ describe('jsonapi-client', function(){
         }
       }
     ]
+    kitten = new Cat(1, 2, puppy)
   })
 
   it('should send the correct Content-Type header', () => {
@@ -142,5 +151,17 @@ describe('jsonapi-client', function(){
     const received_dogs = client.deserialize_array(dogs_response, Dog);
 
     expect(received_dogs).to.be.an('array').to.have.deep.members([puppy, puppy2]);
+  })
+
+  it('should serialize only whitelisted attributes if specified', () => {
+    const request = client.build_request_update({resource: kitten, attributes: ['age']});
+
+    expect(request.data.data).to.eql({
+      type: 'cat',
+      id: 1,
+      attributes: {
+        age: 2
+      }
+    });
   })
 })
