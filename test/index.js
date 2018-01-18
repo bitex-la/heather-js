@@ -9,11 +9,12 @@ class Dog {
 }
 
 describe('jsonapi-client', function(){
-  let client, puppy, dog_response, dog_response_without_type
+  let client, puppy, puppy2, dog_response, dog_response_without_type, dogs_response
 
   beforeEach(() => {
     client = new JsonApiClient('http://anyapi.com')
     puppy = new Dog(1, 2)
+    puppy2 = new Dog(2, 3)
     dog_response = {
       type: 'dog',
       id: 1,
@@ -27,6 +28,22 @@ describe('jsonapi-client', function(){
         age: 2
       }
     }
+    dogs_response = [
+      {
+        type: 'dog',
+        id: 1,
+        attributes: {
+          age: 2
+        }
+      },
+      {
+        type: 'dog',
+        id: 2,
+        attributes: {
+          age: 3
+        }
+      }
+    ]
   })
 
   it('should send the correct Content-Type header', () => {
@@ -56,7 +73,7 @@ describe('jsonapi-client', function(){
   })
 
   it('should send a POST request on create', () => {
-    const request = client.build_request_create()
+    const request = client.build_request_create({})
     expect(request.method).to.equal('POST')
   })
 
@@ -119,5 +136,11 @@ describe('jsonapi-client', function(){
       id: 1,
       age: 2
     });
+  })
+
+  it('should parse an array of objects with a given class', () => {
+    const received_dogs = client.deserialize_array(dogs_response, Dog);
+
+    expect(received_dogs).to.be.an('array').to.have.deep.members([puppy, puppy2]);
   })
 })

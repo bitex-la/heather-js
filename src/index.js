@@ -32,7 +32,9 @@ export default class Client {
     result.data.type = type || resource.constructor.name.toLowerCase()
 
     if (resource) {
-      result.data.id = resource.id
+      if(resource.id) {
+        result.data.id = resource.id
+      }
       result.data.attributes = {}
 
       _.forOwn(resource, (value, property) => {
@@ -57,7 +59,7 @@ export default class Client {
     return this.build_request({method: 'PATCH', data})
   }
 
-  build_request_create(){
+  build_request_create({ resource, type }){
     return this.build_request({method: 'POST'})
   }
 
@@ -65,26 +67,61 @@ export default class Client {
     return this.build_request({method: 'DELETE'})
   }
 
-  // This was split into the method and a build method to be able to test the
+  // These were split into the method and a build method to be able to test the
   // requests without mocking the network
   find(params){
-    return axios(this.build_request_find(params))
+    return new Promise((resolve, reject) => {
+      axios(this.build_request_find(params)).then(
+        response => resolve(this.deserialize(response.data))
+      ).catch(
+        error => reject(error)
+      )
+    })
   }
 
   find_all(params){
-    return axios(this.build_request_find_all(params))
+    return new Promise((resolve, reject) => {
+      axios(this.build_request_find_all(params)).then(
+        response => resolve(this.deserialize_array(response.data))
+      ).catch(
+        error => reject(error)
+      )
+    })
   }
 
   update(params){
-    return axios(this.build_request_update(params))
+    return new Promise((resolve, reject) => {
+      axios(this.build_request_update(params)).then(
+        response => resolve(this.deserialize(response.data))
+      ).catch(
+        error => reject(error)
+      )
+    })
   }
 
   create(params){
-    return axios(this.build_request_create(params))
+    return new Promise((resolve, reject) => {
+      axios(this.build_request_create(params)).then(
+        response => resolve(this.deserialize(response.data))
+      ).catch(
+        error => reject(error)
+      )
+    })
   }
 
   delete(params){
-    return axios(this.build_request_delete(params))
+    return new Promise((resolve, reject) => {
+      axios(this.build_request_delete(params)).then(
+        response => resolve(this.deserialize(response.data))
+      ).catch(
+        error => reject(error)
+      )
+    })
+  }
+
+  //Allow requests not necessarily in JSON API.
+  custom_request(request){
+    return axios(request)
   }
 
   deserialize(data, klass){
@@ -100,5 +137,9 @@ export default class Client {
     })
 
     return obj
+  }
+
+  deserialize_array(data, klass){
+    return _.map(data, elem => this.deserialize(elem, klass))
   }
 }
