@@ -8,7 +8,7 @@
     "build:main": "babel --out-dir dist --ignore test src",
     "build:umd": "webpack --output-filename index.umd.js",
     "build:umd.min": "webpack --output-filename index.umd.min.js -p",
-    "test": "mocha --require babel-polyfill --require babel-register"
+    "test": "mocha --require babel-polyfill --require babel-register -R spec"
   },
   "repository": {
     "type": "git",
