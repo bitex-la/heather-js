@@ -1,4 +1,8 @@
-import { expect } from 'chai'
+import chai, { expect } from 'chai'
+import spies from 'chai-spies'
+chai.use(spies)
+const sandbox = chai.spy.sandbox()
+
 import JsonApiClient from '../src'
 
 class Dog {
@@ -19,7 +23,7 @@ class Cat {
 describe('jsonapi-client', function(){
   let client
   let puppy, puppy2, kitten
-  let dog_response, dog_response_without_type, dogs_response, cat_response
+  let dog_response, dog_response_without_type, dogs_response, cat_response, cat_response_with_links
 
   beforeEach(() => {
     client = new JsonApiClient('http://anyapi.com')
@@ -64,6 +68,21 @@ describe('jsonapi-client', function(){
         color: 'white'
       }
     }
+    cat_response_with_links = {
+      type: 'cats',
+      id: 2,
+      attributes: {
+        age: 2,
+        color: 'white'
+      },
+      links: {
+        self: 'http://anyapi.com/cat/2/'
+      }
+    }
+  })
+
+  afterEach(() => {
+    sandbox.restore()
   })
 
   it('should send the correct Content-Type header', () => {
@@ -205,5 +224,21 @@ describe('jsonapi-client', function(){
     client.pluralize = false
     const request = client.build_request_delete({resource: puppy})
     expect(request.url).to.equal('http://anyapi.com/dog/1/')
+  })
+
+  it('should deserialize inserting the links into the object', () => {
+    const received_cat = client.deserialize(cat_response_with_links, Cat)
+
+    expect(received_cat.links).to.eql({ self: 'http://anyapi.com/cat/2/' })
+  })
+
+  it('should call find on self link when refreshing', () => {
+    const received_cat = client.deserialize(cat_response_with_links, Cat)
+
+    sandbox.on(client, 'custom_request', ({url}) => 'Received URL = ' + url)
+
+    const response = received_cat.refresh()
+
+    expect(response).to.eql('Received URL = http://anyapi.com/cat/2/')
   })
 })

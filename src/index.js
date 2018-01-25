@@ -146,16 +146,14 @@ export default class Client {
 
   //Allow requests not necessarily in JSON API.
   custom_request(request){
-    return axios(request)
+    return axios(request).catch(
+      error => console.log(error)
+    )
   }
 
   deserialize(data, klass, params = {}){
-    let obj
-    if (klass) {
-      obj = new klass()
-    } else {
-      obj = {type: data.type}
-    }
+    let obj = (klass) ? new klass() : { type: data.type }
+
     obj.id = data.id
 
     _.forEach(data.attributes, (value, key) => {
@@ -163,6 +161,13 @@ export default class Client {
         obj[key] = value
       }
     })
+
+    if (data.links) {
+      obj.links = data.links
+      if (data.links.self) {
+        obj.refresh = () => this.custom_request({ url: data.links.self })
+      }
+    }
 
     return obj
   }
