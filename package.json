@@ -27,7 +27,8 @@
   "dependencies": {
     "axios": "0.17.1",
     "immutable": "^3.8.2",
-    "lodash": "^4.17.4"
+    "lodash": "^4.17.4",
+    "pluralize": "^7.0.0"
   },
   "devDependencies": {
     "babel-cli": "6.26.0",

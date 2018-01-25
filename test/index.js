@@ -125,7 +125,7 @@ describe('jsonapi-client', function(){
     const request = client.build_request_update({resource: puppy})
 
     expect(request.data.data).to.eql({
-      type: 'dog',
+      type: 'dogs',
       id: 1,
       attributes: {
         age: 2
@@ -167,7 +167,7 @@ describe('jsonapi-client', function(){
     const request = client.build_request_update({resource: kitten, attributes: ['age']})
 
     expect(request.data.data).to.eql({
-      type: 'cat',
+      type: 'cats',
       id: 1,
       attributes: {
         age: 2
@@ -193,10 +193,16 @@ describe('jsonapi-client', function(){
 
   it('should write the id in the url for update', () => {
     const request = client.build_request_update({resource: puppy})
-    expect(request.url).to.equal('http://anyapi.com/dog/1/')
+    expect(request.url).to.equal('http://anyapi.com/dogs/1/')
   })
 
   it('should write the id in the url for delete', () => {
+    const request = client.build_request_delete({resource: puppy})
+    expect(request.url).to.equal('http://anyapi.com/dogs/1/')
+  })
+
+  it('should not pluralize if it is specified', () => {
+    client.pluralize = false
     const request = client.build_request_delete({resource: puppy})
     expect(request.url).to.equal('http://anyapi.com/dog/1/')
   })

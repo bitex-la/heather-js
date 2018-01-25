@@ -1,12 +1,14 @@
 import axios from 'axios'
 import _ from 'lodash'
 import { fromJS } from 'immutable'
+import pluralize from 'pluralize'
 
 const minimum_data = fromJS({ data: {} })
 
 export default class Client {
-  constructor(base_url){
+  constructor(base_url, { pluralize = true } = {}){
     this.base_url = (base_url.slice(-1) === '/') ? base_url : base_url + '/'
+    this.pluralize = pluralize
   }
 
   build_request({ method = '', data = minimum_data.toJS(), meta = {} } = {}){
@@ -41,7 +43,7 @@ export default class Client {
   build_data({ resource, type, attributes = [] }){
     let result = minimum_data.toJS()
 
-    result.data.type = type || resource.constructor.name.toLowerCase()
+    result.data.type = type || this.infer_type(resource)
     if (resource) {
       if (resource.id) {
         result.data.id = resource.id
@@ -56,6 +58,13 @@ export default class Client {
     }
 
     return result
+  }
+
+  infer_type(resource) {
+    const resource_type = resource.constructor.name.toLowerCase()
+    return (this.pluralize) ?
+      pluralize(resource_type) :
+      resource_type
   }
 
   build_request_find({ type, id = 0, meta } = {}){
