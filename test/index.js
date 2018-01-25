@@ -72,9 +72,9 @@ describe('jsonapi-client', function(){
     expect(request.headers['Content-Type']).to.equal('application/vnd.api+json')
   })
 
-  it('should take the initial URL as base_url', () => {
+  it('should take the initial URL as request url', () => {
     const request = client.build_request()
-    expect(request.base_url).to.equal('http://anyapi.com')
+    expect(request.url).to.equal('http://anyapi.com/')
   })
 
   it('should send a GET request on find', () => {
@@ -83,7 +83,7 @@ describe('jsonapi-client', function(){
   })
 
   it('should send a GET request on find_all', () => {
-    const request = client.build_request_find_all()
+    const request = client.build_request_find_all({type: 'dog'})
     expect(request.method).to.equal('GET')
   })
 
@@ -108,7 +108,7 @@ describe('jsonapi-client', function(){
   })
 
   it('should parse an object into the data as a resource', () => {
-    const request = client.build_request_update({resource: puppy, type: 'dogs'});
+    const request = client.build_request_update({resource: puppy, type: 'dogs'})
 
     expect(request.data.data).to.eql({
       type: 'dogs',
@@ -116,13 +116,12 @@ describe('jsonapi-client', function(){
       attributes: {
         age: 2
       }
-    });
+    })
   })
 
   it('should infer the type if no explicit type is provided', () => {
-    const puppy = new Dog(1, 2);
+    const puppy = new Dog(1, 2)
 
-    const client = new JsonApiClient('http://anyapi.com')
     const request = client.build_request_update({resource: puppy})
 
     expect(request.data.data).to.eql({
@@ -135,37 +134,37 @@ describe('jsonapi-client', function(){
   })
 
   it('should allow meta data', () => {
-    const request = client.build_request_find({type: 'dog', id: 1, meta: {meta_field: 'meta_value'}});
+    const request = client.build_request_find({type: 'dog', id: 1, meta: {meta_field: 'meta_value'}})
 
     expect(request.meta).to.eql({
       meta_field: 'meta_value'
-    });
+    })
   })
 
   it('should parse an object with a given class', () => {
-    const received_dog = client.deserialize(dog_response_without_type, Dog);
+    const received_dog = client.deserialize(dog_response_without_type, Dog)
 
-    expect(received_dog).to.eql(puppy);
+    expect(received_dog).to.eql(puppy)
   })
 
   it('should parse an object without class', () => {
-    const received_dog = client.deserialize(dog_response);
+    const received_dog = client.deserialize(dog_response)
 
     expect(received_dog).to.eql({
       type: 'dog',
       id: 1,
       age: 2
-    });
+    })
   })
 
   it('should parse an array of objects with a given class', () => {
-    const received_dogs = client.deserialize_array(dogs_response, Dog);
+    const received_dogs = client.deserialize_array(dogs_response, Dog)
 
-    expect(received_dogs).to.be.an('array').to.have.deep.members([puppy, puppy2]);
+    expect(received_dogs).to.be.an('array').to.have.deep.members([puppy, puppy2])
   })
 
   it('should serialize only whitelisted attributes if specified', () => {
-    const request = client.build_request_update({resource: kitten, attributes: ['age']});
+    const request = client.build_request_update({resource: kitten, attributes: ['age']})
 
     expect(request.data.data).to.eql({
       type: 'cat',
@@ -173,12 +172,17 @@ describe('jsonapi-client', function(){
       attributes: {
         age: 2
       }
-    });
+    })
   })
 
   it('should deserialize only whitelisted attributes if specified', () => {
-    const received_cat = client.deserialize(cat_response, Cat, {attributes: ['age']});
+    const received_cat = client.deserialize(cat_response, Cat, {attributes: ['age']})
 
-    expect(received_cat).to.eql(new Cat(1, 2));
+    expect(received_cat).to.eql(new Cat(1, 2))
+  })
+
+  it('should write the type in the url', () => {
+    const request = client.build_request_find_all({type: 'dog'})
+    expect(request.url).to.equal('http://anyapi.com/dog/')
   })
 })

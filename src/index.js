@@ -1,18 +1,21 @@
 import axios from 'axios'
 import _ from 'lodash'
+import { fromJS } from 'immutable'
 
-const minimum_data = { data: {} }
+const minimum_data = fromJS({ data: {} })
 
 export default class Client {
   constructor(base_url){
-    this.base_url = base_url
+    this.base_url = (base_url.slice(-1) === '/') ? base_url : base_url + '/'
   }
 
-  build_request({ method = '', data = minimum_data, meta = {} } = {}){
+  build_request({ method = '', data = minimum_data.toJS(), meta = {} } = {}){
     const headers = this.build_headers()
 
+    const url = this.build_url(data)
+
     return {
-      base_url: this.base_url,
+      url,
       method,
       headers,
       data,
@@ -26,11 +29,19 @@ export default class Client {
     }
   }
 
+  build_url({data = {}}){
+    let url = this.base_url
+
+    url += (data.type) ? data.type + '/' : ''
+    url += (data.id) ? data.id + '/' : ''
+
+    return url
+  }
+
   build_data({ resource, type, attributes = [] }){
-    let result = minimum_data
+    let result = minimum_data.toJS()
 
     result.data.type = type || resource.constructor.name.toLowerCase()
-
     if (resource) {
       if (resource.id) {
         result.data.id = resource.id
@@ -43,17 +54,19 @@ export default class Client {
         }
       })
     }
+
     return result
   }
 
-  build_request_find({type, id = 0, meta} = {}){
+  build_request_find({ type, id = 0, meta } = {}){
     const resource = { id }
     const data = this.build_data({ resource, type })
     return this.build_request({method: 'GET', data, meta})
   }
 
-  build_request_find_all(){
-    return this.build_request({method: 'GET'})
+  build_request_find_all({ type }){
+    const data = this.build_data({ type })
+    return this.build_request({method: 'GET', data})
   }
 
   build_request_update({ resource, type, attributes }){
@@ -127,7 +140,7 @@ export default class Client {
   }
 
   deserialize(data, klass, params = {}){
-    let obj;
+    let obj
     if (klass) {
       obj = new klass()
     } else {
@@ -137,7 +150,7 @@ export default class Client {
 
     _.forEach(data.attributes, (value, key) => {
       if(!params.attributes || _.includes(params.attributes, key)) {
-        obj[key] = value;
+        obj[key] = value
       }
     })
 
