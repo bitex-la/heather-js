@@ -70,7 +70,7 @@ export default class Client {
   }
 
   build_request_update({ resource, type, attributes }){
-    const data = this.build_data({resource, type, attributes})
+    const data = this.build_data({ resource, type, attributes })
     return this.build_request({method: 'PATCH', data})
   }
 
@@ -78,8 +78,9 @@ export default class Client {
     return this.build_request({method: 'POST'})
   }
 
-  build_request_delete(){
-    return this.build_request({method: 'DELETE'})
+  build_request_delete({ resource, type }){
+    const data = this.build_data({ resource, type })
+    return this.build_request({method: 'DELETE', data})
   }
 
   // These were split into the method and a build method to be able to test the

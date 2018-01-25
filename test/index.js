@@ -98,7 +98,7 @@ describe('jsonapi-client', function(){
   })
 
   it('should send a DELETE request on delete', () => {
-    const request = client.build_request_delete()
+    const request = client.build_request_delete({type: 'whatever'})
     expect(request.method).to.equal('DELETE')
   })
 
@@ -184,5 +184,20 @@ describe('jsonapi-client', function(){
   it('should write the type in the url', () => {
     const request = client.build_request_find_all({type: 'dog'})
     expect(request.url).to.equal('http://anyapi.com/dog/')
+  })
+
+  it('should write the id in the url', () => {
+    const request = client.build_request_find({type: 'dog', id: 1})
+    expect(request.url).to.equal('http://anyapi.com/dog/1/')
+  })
+
+  it('should write the id in the url for update', () => {
+    const request = client.build_request_update({resource: puppy})
+    expect(request.url).to.equal('http://anyapi.com/dog/1/')
+  })
+
+  it('should write the id in the url for delete', () => {
+    const request = client.build_request_delete({resource: puppy})
+    expect(request.url).to.equal('http://anyapi.com/dog/1/')
   })
 })
