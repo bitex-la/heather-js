@@ -200,10 +200,23 @@ describe('jsonapi-client', function(){
     expect(received_cat).to.eql(new Cat(1, 2))
   })
 
+  it('should ask only for whitelisted attributes if specified', () => {
+    const request = client.build_request_find({type: 'cat', id: 1, attributes: ['age', 'color']})
+
+    expect(request.url).to.include('fields[cat]=age,color')
+  })
+
+  it('should ask only for whitelisted attributes if specified on find_all', () => {
+    const request = client.build_request_find_all({type: 'cat', id: 1, attributes: ['age', 'color']})
+
+    expect(request.url).to.include('fields[cat]=age,color')
+  })
+
   it('should write the type in the url', () => {
     const request = client.build_request_find_all({type: 'dog'})
     expect(request.url).to.equal('http://anyapi.com/dog/')
   })
+
 
   it('should write the id in the url', () => {
     const request = client.build_request_find({type: 'dog', id: 1})

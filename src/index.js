@@ -11,10 +11,10 @@ export default class Client {
     this.pluralize = pluralize
   }
 
-  build_request({ method = '', data = minimum_data.toJS(), meta = {} } = {}){
+  build_request({ method = '', data = minimum_data.toJS(), meta = {}, attributes } = {}){
     const headers = this.build_headers()
 
-    const url = this.build_url(data)
+    const url = this.build_url(data, attributes)
 
     return {
       url,
@@ -31,11 +31,12 @@ export default class Client {
     }
   }
 
-  build_url({data = {}}){
+  build_url({data = {}}, attributes){
     let url = this.base_url
 
     url += (data.type) ? data.type + '/' : ''
     url += (data.id) ? data.id + '/' : ''
+    url += (attributes) ? '?fields[' + data.type + ']=' +attributes.join(',') : ''
 
     return url
   }
@@ -44,6 +45,7 @@ export default class Client {
     let result = minimum_data.toJS()
 
     result.data.type = type || this.infer_type(resource)
+
     if (resource) {
       if (resource.id) {
         result.data.id = resource.id
@@ -67,29 +69,29 @@ export default class Client {
       resource_type
   }
 
-  build_request_find({ type, id = 0, meta } = {}){
+  build_request_find({ type, id = 0, meta, attributes } = {}){
     const resource = { id }
     const data = this.build_data({ resource, type })
-    return this.build_request({method: 'GET', data, meta})
+    return this.build_request({ method: 'GET', data, meta, attributes })
   }
 
-  build_request_find_all({ type }){
+  build_request_find_all({ type, attributes }){
     const data = this.build_data({ type })
-    return this.build_request({method: 'GET', data})
+    return this.build_request({ method: 'GET', data, attributes })
   }
 
   build_request_update({ resource, type, attributes }){
     const data = this.build_data({ resource, type, attributes })
-    return this.build_request({method: 'PATCH', data})
+    return this.build_request({ method: 'PATCH', data })
   }
 
   build_request_create({ resource, type, attributes }){
-    return this.build_request({method: 'POST'})
+    return this.build_request({ method: 'POST' })
   }
 
   build_request_delete({ resource, type }){
     const data = this.build_data({ resource, type })
-    return this.build_request({method: 'DELETE', data})
+    return this.build_request({ method: 'DELETE', data })
   }
 
   // These were split into the method and a build method to be able to test the
