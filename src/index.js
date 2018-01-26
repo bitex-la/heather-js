@@ -170,9 +170,7 @@ export default class Client {
 
   //Allow requests not necessarily in JSON API.
   custom_request(request){
-    return axios(request).catch(
-      error => console.log(error)
-    )
+    return axios(request)
   }
 
   deserialize(data, klass, params = {}){
