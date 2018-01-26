@@ -207,7 +207,7 @@ describe('jsonapi-client', function(){
   })
 
   it('should ask only for whitelisted attributes if specified on find_all', () => {
-    const request = client.build_request_find_all({type: 'cat', id: 1, attributes: ['age', 'color']})
+    const request = client.build_request_find_all({type: 'cat', attributes: ['age', 'color']})
 
     expect(request.url).to.include('fields[cat]=age,color')
   })
@@ -216,7 +216,6 @@ describe('jsonapi-client', function(){
     const request = client.build_request_find_all({type: 'dog'})
     expect(request.url).to.equal('http://anyapi.com/dog/')
   })
-
 
   it('should write the id in the url', () => {
     const request = client.build_request_find({type: 'dog', id: 1})
@@ -253,5 +252,12 @@ describe('jsonapi-client', function(){
     const response = received_cat.refresh()
 
     expect(response).to.eql('Received URL = http://anyapi.com/cat/2/')
+  })
+
+  it('should specify the sorting in the url', () => {
+    const sorting_object = [{ attribute: 'age', orientation: 'desc'}, { attribute: 'color'}]
+    const request = client.build_request_find_all({type: 'cat', sort: sorting_object})
+
+    expect(request.url).to.include('sort=-age,color')
   })
 })

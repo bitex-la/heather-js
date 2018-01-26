@@ -11,10 +11,10 @@ export default class Client {
     this.pluralize = pluralize
   }
 
-  build_request({ method = '', data = minimum_data.toJS(), meta = {}, attributes } = {}){
+  build_request({ method = '', data = minimum_data.toJS(), meta = {}, url_params = {}} = {}){
     const headers = this.build_headers()
 
-    const url = this.build_url(data, attributes)
+    const url = this.build_url(data, url_params)
 
     return {
       url,
@@ -31,12 +31,28 @@ export default class Client {
     }
   }
 
-  build_url({data = {}}, attributes){
+  build_url({ data = {} }, { attributes, sort }){
     let url = this.base_url
 
     url += (data.type) ? data.type + '/' : ''
     url += (data.id) ? data.id + '/' : ''
-    url += (attributes) ? '?fields[' + data.type + ']=' +attributes.join(',') : ''
+
+    let suffixes = []
+
+    if (attributes) {
+      suffixes.push('fields[' + data.type + ']=' +attributes.join(','))
+    }
+
+    if (sort) {
+      const sort_strings = sort.map((sorting_object) =>
+        (sorting_object.orientation && sorting_object.orientation.toLowerCase() === 'desc') ?
+          '-' + sorting_object.attribute :
+          sorting_object.attribute
+      )
+      suffixes.push('sort=' +sort_strings.join(','))
+    }
+
+    url += (!_.isEmpty(suffixes)) ? '?' + suffixes.join('&') : ''
 
     return url
   }
@@ -69,15 +85,17 @@ export default class Client {
       resource_type
   }
 
-  build_request_find({ type, id = 0, meta, attributes } = {}){
+  build_request_find({ type, id = 0, meta, attributes, sort } = {}){
     const resource = { id }
     const data = this.build_data({ resource, type })
-    return this.build_request({ method: 'GET', data, meta, attributes })
+    const url_params = { attributes, sort }
+    return this.build_request({ method: 'GET', data, meta, url_params })
   }
 
-  build_request_find_all({ type, attributes }){
+  build_request_find_all({ type, attributes, sort }){
     const data = this.build_data({ type })
-    return this.build_request({ method: 'GET', data, attributes })
+    const url_params = { attributes, sort }
+    return this.build_request({ method: 'GET', data, url_params })
   }
 
   build_request_update({ resource, type, attributes }){
