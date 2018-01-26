@@ -31,7 +31,7 @@ export default class Client {
     }
   }
 
-  build_url({ data = {} }, { attributes, sort }){
+  build_url({ data = {} }, { attributes, sort, filter }){
     let url = this.base_url
 
     url += (data.type) ? data.type + '/' : ''
@@ -40,7 +40,7 @@ export default class Client {
     let suffixes = []
 
     if (attributes) {
-      suffixes.push('fields[' + data.type + ']=' +attributes.join(','))
+      suffixes.push('fields[' + data.type + ']=' + attributes.join(','))
     }
 
     if (sort) {
@@ -49,7 +49,11 @@ export default class Client {
           '-' + sorting_object.attribute :
           sorting_object.attribute
       )
-      suffixes.push('sort=' +sort_strings.join(','))
+      suffixes.push('sort=' + sort_strings.join(','))
+    }
+
+    if (filter) {
+      suffixes.push('filter=' + filter)
     }
 
     url += (!_.isEmpty(suffixes)) ? '?' + suffixes.join('&') : ''
@@ -85,16 +89,16 @@ export default class Client {
       resource_type
   }
 
-  build_request_find({ type, id = 0, meta, attributes, sort } = {}){
+  build_request_find({ type, id = 0, meta, attributes, sort, filter } = {}){
     const resource = { id }
     const data = this.build_data({ resource, type })
-    const url_params = { attributes, sort }
+    const url_params = { attributes, sort, filter }
     return this.build_request({ method: 'GET', data, meta, url_params })
   }
 
-  build_request_find_all({ type, attributes, sort }){
+  build_request_find_all({ type, attributes, sort, filter }){
     const data = this.build_data({ type })
-    const url_params = { attributes, sort }
+    const url_params = { attributes, sort, filter }
     return this.build_request({ method: 'GET', data, url_params })
   }
 

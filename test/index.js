@@ -260,4 +260,10 @@ describe('jsonapi-client', function(){
 
     expect(request.url).to.include('sort=-age,color')
   })
+
+  it('should specify a filter parameter in the url without modifying it', () => {
+    const request = client.build_request_find_all({type: 'cat', filter: 'age>2'})
+
+    expect(request.url).to.include('filter=age>2')
+  })
 })
