@@ -23,7 +23,8 @@ class Cat {
 describe('jsonapi-client', function(){
   let client
   let puppy, puppy2, kitten
-  let dog_response, dog_response_without_type, dogs_response, cat_response, cat_response_with_links
+  let dog_response, dog_response_without_type, dogs_response
+  let cat_response, cat_response_with_links, cats_response_with_links
 
   beforeEach(() => {
     client = new JsonApiClient('http://anyapi.com')
@@ -78,6 +79,19 @@ describe('jsonapi-client', function(){
       links: {
         self: 'http://anyapi.com/cat/2/'
       }
+    }
+    cats_response_with_links = {
+      links: {
+        next: 'http://anyapi.com/cat/next/'
+      },
+      data: [{
+        type: 'cats',
+        id: 2,
+        attributes: {
+          age: 2,
+          color: 'white'
+        }
+      }]
     }
   })
 
@@ -265,5 +279,15 @@ describe('jsonapi-client', function(){
     const request = client.build_request_find_all({type: 'cat', filter: 'age>2'})
 
     expect(request.url).to.include('filter=age>2')
+  })
+
+  it('should admit pagination in find_all', () => {
+    const received_cat = client.deserialize_array(cats_response_with_links, Cat)
+
+    sandbox.on(client, 'custom_request', ({url}) => 'Received URL = ' + url)
+
+    const response = received_cat.next()
+
+    expect(response).to.eql('Received URL = http://anyapi.com/cat/next/')
   })
 })

@@ -187,7 +187,7 @@ export default class Client {
     })
 
     if (data.links) {
-      obj.links = data.links
+      obj.links = _.omit(data.links, 'first', 'last', 'prev', 'next')
       if (data.links.self) {
         obj.refresh = () => this.custom_request({ url: data.links.self })
       }
@@ -197,6 +197,13 @@ export default class Client {
   }
 
   deserialize_array(data, klass){
-    return _.map(data, elem => this.deserialize(elem, klass))
+    const response = _.map(data, elem => this.deserialize(elem, klass))
+
+    const pagination_links = _.pick(data.links, 'first', 'last', 'prev', 'next')
+    _.forOwn(pagination_links, (value, key) => {
+      response[key] = () => this.custom_request({ url: value })
+    })
+
+    return response
   }
 }
