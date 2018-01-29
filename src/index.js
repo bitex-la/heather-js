@@ -6,9 +6,14 @@ import pluralize from 'pluralize'
 const minimum_data = fromJS({ data: {} })
 
 export default class Client {
-  constructor(base_url, { pluralize = true } = {}){
+  constructor(base_url, { use_plural = true } = {}){
     this.base_url = (base_url.slice(-1) === '/') ? base_url : base_url + '/'
-    this.pluralize = pluralize
+    this.use_plural = use_plural
+    this.models = []
+  }
+
+  define(model){
+    this.models.push(model)
   }
 
   build_request({ method = '', data = minimum_data.toJS(), meta = {}, url_params = {}} = {}){
@@ -84,7 +89,7 @@ export default class Client {
 
   infer_type(resource) {
     const resource_type = resource.constructor.name.toLowerCase()
-    return (this.pluralize) ?
+    return (this.use_plural) ?
       pluralize(resource_type) :
       resource_type
   }
@@ -121,7 +126,7 @@ export default class Client {
   find(params){
     return new Promise((resolve, reject) => {
       axios(this.build_request_find(params)).then(
-        response => resolve(this.deserialize(response.data))
+        response => resolve(this.deserialize(response.data, params.attributes))
       ).catch(
         error => reject(error)
       )
@@ -131,7 +136,7 @@ export default class Client {
   find_all(params){
     return new Promise((resolve, reject) => {
       axios(this.build_request_find_all(params)).then(
-        response => resolve(this.deserialize_array(response.data))
+        response => resolve(this.deserialize_array(response.data, params.attributes))
       ).catch(
         error => reject(error)
       )
@@ -141,7 +146,7 @@ export default class Client {
   update(params){
     return new Promise((resolve, reject) => {
       axios(this.build_request_update(params)).then(
-        response => resolve(this.deserialize(response.data))
+        response => resolve(this.deserialize(response.data, params.attributes))
       ).catch(
         error => reject(error)
       )
@@ -151,7 +156,7 @@ export default class Client {
   create(params){
     return new Promise((resolve, reject) => {
       axios(this.build_request_create(params)).then(
-        response => resolve(this.deserialize(response.data))
+        response => resolve(this.deserialize(response.data, params.attributes))
       ).catch(
         error => reject(error)
       )
@@ -161,7 +166,7 @@ export default class Client {
   delete(params){
     return new Promise((resolve, reject) => {
       axios(this.build_request_delete(params)).then(
-        response => resolve(this.deserialize(response.data))
+        response => resolve(response.data)
       ).catch(
         error => reject(error)
       )
@@ -173,21 +178,29 @@ export default class Client {
     return axios(request)
   }
 
-  deserialize(data, klass, params = {}){
-    let obj = (klass) ? new klass() : { type: data.type }
+  deserialize(response, params = {}){
+    let obj
+    try {
+      const class_name = _.capitalize(pluralize.singular(response.type))
+      const klass = this.models.find((model) => model.name === class_name)
 
-    obj.id = data.id
+      obj = new klass()
+    } catch(e) {
+      obj = { type: response.type }
+    }
 
-    _.forEach(data.attributes, (value, key) => {
+    obj.id = response.id
+
+    _.forEach(response.attributes, (value, key) => {
       if(!params.attributes || _.includes(params.attributes, key)) {
         obj[key] = value
       }
     })
 
-    if (data.links) {
-      obj.links = _.omit(data.links, 'first', 'last', 'prev', 'next')
-      if (data.links.self) {
-        obj.refresh = () => this.custom_request({ url: data.links.self })
+    if (response.links) {
+      obj.links = _.omit(response.links, 'first', 'last', 'prev', 'next')
+      if (response.links.self) {
+        obj.refresh = () => this.custom_request({ url: response.links.self })
       }
     }
 

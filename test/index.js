@@ -23,22 +23,19 @@ class Cat {
 describe('jsonapi-client', function(){
   let client
   let puppy, puppy2, kitten
-  let dog_response, dog_response_without_type, dogs_response
+  let dog_response, dogs_response
   let cat_response, cat_response_with_links, cats_response_with_links
+  let horse_response
 
   beforeEach(() => {
     client = new JsonApiClient('http://anyapi.com')
+    client.define(Dog)
+    client.define(Cat)
 
     puppy = new Dog(1, 2)
     puppy2 = new Dog(2, 3)
     dog_response = {
       type: 'dog',
-      id: 1,
-      attributes: {
-        age: 2
-      }
-    }
-    dog_response_without_type = {
       id: 1,
       attributes: {
         age: 2
@@ -92,6 +89,13 @@ describe('jsonapi-client', function(){
           color: 'white'
         }
       }]
+    }
+    horse_response = {
+      type: 'horse',
+      id: 1,
+      attributes: {
+        age: 2
+      }
     }
   })
 
@@ -174,24 +178,24 @@ describe('jsonapi-client', function(){
     })
   })
 
-  it('should parse an object with a given class', () => {
-    const received_dog = client.deserialize(dog_response_without_type, Dog)
+  it('should parse an object with an existing class', () => {
+    const received_dog = client.deserialize(dog_response)
 
     expect(received_dog).to.eql(puppy)
   })
 
   it('should parse an object without class', () => {
-    const received_dog = client.deserialize(dog_response)
+    const received_dog = client.deserialize(horse_response)
 
     expect(received_dog).to.eql({
-      type: 'dog',
+      type: 'horse',
       id: 1,
       age: 2
     })
   })
 
-  it('should parse an array of objects with a given class', () => {
-    const received_dogs = client.deserialize_array(dogs_response, Dog)
+  it('should parse an array of objects with an existing class', () => {
+    const received_dogs = client.deserialize_array(dogs_response)
 
     expect(received_dogs).to.be.an('array').to.have.deep.members([puppy, puppy2])
   })
@@ -209,7 +213,7 @@ describe('jsonapi-client', function(){
   })
 
   it('should deserialize only whitelisted attributes if specified', () => {
-    const received_cat = client.deserialize(cat_response, Cat, {attributes: ['age']})
+    const received_cat = client.deserialize(cat_response, {attributes: ['age']})
 
     expect(received_cat).to.eql(new Cat(1, 2))
   })
@@ -247,19 +251,19 @@ describe('jsonapi-client', function(){
   })
 
   it('should not pluralize if it is specified', () => {
-    client.pluralize = false
+    client.use_plural = false
     const request = client.build_request_delete({resource: puppy})
     expect(request.url).to.equal('http://anyapi.com/dog/1/')
   })
 
   it('should deserialize inserting the links into the object', () => {
-    const received_cat = client.deserialize(cat_response_with_links, Cat)
+    const received_cat = client.deserialize(cat_response_with_links)
 
     expect(received_cat.links).to.eql({ self: 'http://anyapi.com/cat/2/' })
   })
 
   it('should call find on self link when refreshing', () => {
-    const received_cat = client.deserialize(cat_response_with_links, Cat)
+    const received_cat = client.deserialize(cat_response_with_links)
 
     sandbox.on(client, 'custom_request', ({url}) => 'Received URL = ' + url)
 
@@ -282,7 +286,7 @@ describe('jsonapi-client', function(){
   })
 
   it('should admit pagination in find_all', () => {
-    const received_cat = client.deserialize_array(cats_response_with_links, Cat)
+    const received_cat = client.deserialize_array(cats_response_with_links)
 
     sandbox.on(client, 'custom_request', ({url}) => 'Received URL = ' + url)
 
