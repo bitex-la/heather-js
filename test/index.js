@@ -130,7 +130,7 @@ describe('jsonapi-client', function(){
   })
 
   it('should send a POST request on create', () => {
-    const request = client.build_request_create({})
+    const request = client.build_request_create({ resource: puppy })
     expect(request.method).to.equal('POST')
   })
 
@@ -293,5 +293,37 @@ describe('jsonapi-client', function(){
     const response = received_cat.next()
 
     expect(response).to.eql('Received URL = http://anyapi.com/cat/next/')
+  })
+
+  it('should serialize relationships for update', () => {
+    const request = client.build_request_update({resource: kitten})
+
+    expect(request.data.relationships).to.eql({
+      friend: {
+        data: {
+          type: 'dogs',
+          id: 1,
+          attributes: {
+            age: 2
+          }
+        }
+      }
+    })
+  })
+
+  it('should serialize relationships for create', () => {
+    const request = client.build_request_create({resource: kitten})
+
+    expect(request.data.relationships).to.eql({
+      friend: {
+        data: {
+          type: 'dogs',
+          id: 1,
+          attributes: {
+            age: 2
+          }
+        }
+      }
+    })
   })
 })

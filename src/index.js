@@ -79,7 +79,12 @@ export default class Client {
 
       _.forOwn(resource, (value, property) => {
         if (property !== 'id' && (_.isEmpty(attributes) || _.includes(attributes, property))) {
-          result.data.attributes[property] = value
+          if (_.includes(this.models, value.constructor)) {
+            result.relationships = result.relationships || {}
+            result.relationships[property] = this.build_data({ resource: value })
+          } else {
+            result.data.attributes[property] = value
+          }
         }
       })
     }
@@ -113,7 +118,8 @@ export default class Client {
   }
 
   build_request_create({ resource, type, attributes }){
-    return this.build_request({ method: 'POST' })
+    const data = this.build_data({ resource, type, attributes })
+    return this.build_request({ method: 'POST', data })
   }
 
   build_request_delete({ resource, type }){
