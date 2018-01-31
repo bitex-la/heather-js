@@ -210,6 +210,12 @@ export default class Client {
       }
     }
 
+    _.forEach(response.relationships, (value, key) => {
+      if (_.has(obj, key)) {
+        obj[key] = this.deserialize(value.data)
+      }
+    })
+
     return obj
   }
 

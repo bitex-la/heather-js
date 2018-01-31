@@ -24,7 +24,7 @@ describe('jsonapi-client', function(){
   let client
   let puppy, puppy2, kitten
   let dog_response, dogs_response
-  let cat_response, cat_response_with_links, cats_response_with_links
+  let cat_response, cat_response_with_links, cats_response_with_links, cat_response_with_relationships
   let horse_response
 
   beforeEach(() => {
@@ -89,6 +89,24 @@ describe('jsonapi-client', function(){
           color: 'white'
         }
       }]
+    }
+    cat_response_with_relationships = {
+      type: 'cats',
+      id: 1,
+      attributes: {
+        age: 2
+      },
+      relationships: {
+        friend: {
+          data: {
+            type: 'dogs',
+            id: 1,
+            attributes: {
+              age: 2
+            }
+          }
+        }
+      }
     }
     horse_response = {
       type: 'horse',
@@ -295,7 +313,7 @@ describe('jsonapi-client', function(){
     expect(response).to.eql('Received URL = http://anyapi.com/cat/next/')
   })
 
-  it('should serialize relationships for update', () => {
+  it('should serialize relationships on update', () => {
     const request = client.build_request_update({resource: kitten})
 
     expect(request.data.relationships).to.eql({
@@ -311,7 +329,7 @@ describe('jsonapi-client', function(){
     })
   })
 
-  it('should serialize relationships for create', () => {
+  it('should serialize relationships on create', () => {
     const request = client.build_request_create({resource: kitten})
 
     expect(request.data.relationships).to.eql({
@@ -325,5 +343,11 @@ describe('jsonapi-client', function(){
         }
       }
     })
+  })
+
+  it('should deserialize relationships on find', () => {
+    const received_cat = client.deserialize(cat_response_with_relationships)
+
+    expect(received_cat.friend).to.eql(puppy)
   })
 })
