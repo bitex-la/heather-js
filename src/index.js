@@ -3,13 +3,13 @@ import _ from 'lodash'
 import { fromJS } from 'immutable'
 import pluralize from 'pluralize'
 
-const minimum_data = fromJS({ data: {} })
+const minimumData = fromJS({ data: {} })
 const snakeToCamel = (s) => s.replace(/(\_\w)/g, (m) => m[1].toUpperCase())
 
 export default class Client {
-  constructor(base_url, { use_plural = true } = {}){
-    this.base_url = (base_url.slice(-1) === '/') ? base_url : base_url + '/'
-    this.use_plural = use_plural
+  constructor(baseUrl, { usePlural = true } = {}){
+    this.baseUrl = (baseUrl.slice(-1) === '/') ? baseUrl : baseUrl + '/'
+    this.usePlural = usePlural
     this.models = []
     this.headers = {'Content-Type': 'application/vnd.api+json'}
   }
@@ -18,9 +18,9 @@ export default class Client {
     this.models.push(model)
   }
 
-  build_request({ method = '', data = minimum_data.toJS(), meta = {}, url_params = {}} = {}){
+  buildRequest({ method = '', data = minimumData.toJS(), meta = {}, urlParams = {}} = {}){
 
-    const url = this.build_url(data, url_params)
+    const url = this.buildUrl(data, urlParams)
 
     return {
       url,
@@ -31,12 +31,12 @@ export default class Client {
     }
   }
 
-  set_header(key, value){
+  setHeader(key, value){
     this.headers[key] = value
   }
 
-  build_url({ data = {} }, { attributes, sort, filter }){
-    let url = this.base_url
+  buildUrl({ data = {} }, { attributes, sort, filter }){
+    let url = this.baseUrl
 
     url += (data.type) ? data.type + '/' : ''
     url += (data.id) ? data.id + '/' : ''
@@ -48,12 +48,12 @@ export default class Client {
     }
 
     if (sort) {
-      const sort_strings = sort.map((sorting_object) =>
-        (sorting_object.orientation && sorting_object.orientation.toLowerCase() === 'desc') ?
-          '-' + sorting_object.attribute :
-          sorting_object.attribute
+      const sortStrings = sort.map((sortingObject) =>
+        (sortingObject.orientation && sortingObject.orientation.toLowerCase() === 'desc') ?
+          '-' + sortingObject.attribute :
+          sortingObject.attribute
       )
-      suffixes.push('sort=' + sort_strings.join(','))
+      suffixes.push('sort=' + sortStrings.join(','))
     }
 
     if (filter) {
@@ -65,10 +65,10 @@ export default class Client {
     return url
   }
 
-  build_data({ resource, type, attributes = [] }){
-    let result = minimum_data.toJS()
+  buildData({ resource, type, attributes = [] }){
+    let result = minimumData.toJS()
 
-    result.data.type = type || this.infer_type(resource)
+    result.data.type = type || this.inferType(resource)
 
     if (resource) {
       if (resource.id) {
@@ -80,7 +80,7 @@ export default class Client {
         if (property !== 'id' && (_.isEmpty(attributes) || _.includes(attributes, property))) {
           if (_.includes(this.models, value.constructor)) {
             result.relationships = result.relationships || {}
-            result.relationships[property] = this.build_data({ resource: value })
+            result.relationships[property] = this.buildData({ resource: value })
           } else {
             result.data.attributes[property] = value
           }
@@ -91,46 +91,46 @@ export default class Client {
     return result
   }
 
-  infer_type(resource) {
-    const resource_type = resource.constructor.name.toLowerCase()
-    return (this.use_plural) ?
-      pluralize(resource_type) :
-      resource_type
+  inferType(resource) {
+    const resourceType = resource.constructor.name.toLowerCase()
+    return (this.usePlural) ?
+      pluralize(resourceType) :
+      resourceType
   }
 
-  build_request_find({ type, id = 0, meta, attributes, sort, filter } = {}){
+  buildRequestFind({ type, id = 0, meta, attributes, sort, filter } = {}){
     const resource = { id }
-    const data = this.build_data({ resource, type })
-    const url_params = { attributes, sort, filter }
-    return this.build_request({ method: 'GET', data, meta, url_params })
+    const data = this.buildData({ resource, type })
+    const urlParams = { attributes, sort, filter }
+    return this.buildRequest({ method: 'GET', data, meta, urlParams })
   }
 
-  build_request_find_all({ type, attributes, sort, filter }){
-    const data = this.build_data({ type })
-    const url_params = { attributes, sort, filter }
-    return this.build_request({ method: 'GET', data, url_params })
+  buildRequestFindAll({ type, attributes, sort, filter }){
+    const data = this.buildData({ type })
+    const urlParams = { attributes, sort, filter }
+    return this.buildRequest({ method: 'GET', data, urlParams })
   }
 
-  build_request_update({ resource, type, attributes }){
-    const data = this.build_data({ resource, type, attributes })
-    return this.build_request({ method: 'PATCH', data })
+  buildRequestUpdate({ resource, type, attributes }){
+    const data = this.buildData({ resource, type, attributes })
+    return this.buildRequest({ method: 'PATCH', data })
   }
 
-  build_request_create({ resource, type, attributes }){
-    const data = this.build_data({ resource, type, attributes })
-    return this.build_request({ method: 'POST', data })
+  buildRequestCreate({ resource, type, attributes }){
+    const data = this.buildData({ resource, type, attributes })
+    return this.buildRequest({ method: 'POST', data })
   }
 
-  build_request_delete({ resource, type }){
-    const data = this.build_data({ resource, type })
-    return this.build_request({ method: 'DELETE', data })
+  buildRequestDelete({ resource, type }){
+    const data = this.buildData({ resource, type })
+    return this.buildRequest({ method: 'DELETE', data })
   }
 
   // These were split into the method and a build method to be able to test the
   // requests without mocking the network
   find(params){
     return new Promise((resolve, reject) => {
-      axios(this.build_request_find(params)).then(
+      axios(this.buildRequestFind(params)).then(
         response => resolve(this.deserialize(response.data.data, params.attributes))
       ).catch(
         error => reject(error)
@@ -138,10 +138,10 @@ export default class Client {
     })
   }
 
-  find_all(params){
+  findAll(params){
     return new Promise((resolve, reject) => {
-      axios(this.build_request_find_all(params)).then(
-        response => resolve(this.deserialize_array(response.data, params.attributes))
+      axios(this.buildRequestFindAll(params)).then(
+        response => resolve(this.deserializeArray(response.data, params.attributes))
       ).catch(
         error => reject(error)
       )
@@ -150,7 +150,7 @@ export default class Client {
 
   update(params){
     return new Promise((resolve, reject) => {
-      axios(this.build_request_update(params)).then(
+      axios(this.buildRequestUpdate(params)).then(
         response => resolve(this.deserialize(response.data, params.attributes))
       ).catch(
         error => reject(error)
@@ -160,7 +160,7 @@ export default class Client {
 
   create(params){
     return new Promise((resolve, reject) => {
-      axios(this.build_request_create(params)).then(
+      axios(this.buildRequestCreate(params)).then(
         response => resolve(this.deserialize(response.data, params.attributes))
       ).catch(
         error => reject(error)
@@ -170,7 +170,7 @@ export default class Client {
 
   delete(params){
     return new Promise((resolve, reject) => {
-      axios(this.build_request_delete(params)).then(
+      axios(this.buildRequestDelete(params)).then(
         response => resolve(response.data)
       ).catch(
         error => reject(error)
@@ -179,15 +179,15 @@ export default class Client {
   }
 
   //Allow requests not necessarily in JSON API.
-  custom_request(request){
+  customRequest(request){
     return axios(request)
   }
 
   deserialize(response, params = {}){
     let obj
     try {
-      const class_name = _.capitalize(pluralize.singular(snakeToCamel(response.type)))
-      const klass = this.models.find((model) => model.name === class_name)
+      const className = _.capitalize(pluralize.singular(snakeToCamel(response.type)))
+      const klass = this.models.find((model) => model.name === className)
 
       obj = new klass()
     } catch(e) {
@@ -205,7 +205,7 @@ export default class Client {
     if (response.links) {
       obj.links = _.omit(response.links, 'first', 'last', 'prev', 'next')
       if (response.links.self) {
-        obj.refresh = () => this.custom_request({ url: response.links.self })
+        obj.refresh = () => this.customRequest({ url: response.links.self })
       }
     }
 
@@ -220,12 +220,12 @@ export default class Client {
     return obj
   }
 
-  deserialize_array(data, klass){
+  deserializeArray(data, klass){
     const response = _.map(data, elem => this.deserialize(elem, klass))
 
-    const pagination_links = _.pick(data.links, 'first', 'last', 'prev', 'next')
-    _.forOwn(pagination_links, (value, key) => {
-      response[key] = () => this.custom_request({ url: value })
+    const paginationLinks = _.pick(data.links, 'first', 'last', 'prev', 'next')
+    _.forOwn(paginationLinks, (value, key) => {
+      response[key] = () => this.customRequest({ url: value })
     })
 
     return response
