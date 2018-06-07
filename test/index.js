@@ -350,4 +350,11 @@ describe('jsonapi-client', function(){
 
     expect(received_cat.friend).to.eql(puppy)
   })
+
+  it('should allow custom header', () => {
+    client.set_header('Authorization', 'mytoken')
+    const request = client.build_request()
+    expect(request.headers).to.have.property('Authorization')
+    expect(request.headers['Authorization']).to.equal('mytoken')
+  })
 })

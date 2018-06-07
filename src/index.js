@@ -10,6 +10,7 @@ export default class Client {
     this.base_url = (base_url.slice(-1) === '/') ? base_url : base_url + '/'
     this.use_plural = use_plural
     this.models = []
+    this.headers = {'Content-Type': 'application/vnd.api+json'}
   }
 
   define(model){
@@ -17,23 +18,20 @@ export default class Client {
   }
 
   build_request({ method = '', data = minimum_data.toJS(), meta = {}, url_params = {}} = {}){
-    const headers = this.build_headers()
 
     const url = this.build_url(data, url_params)
 
     return {
       url,
       method,
-      headers,
+      headers: this.headers,
       data,
       meta
     }
   }
 
-  build_headers(){
-    return {
-      'Content-Type': 'application/vnd.api+json'
-    }
+  set_header(key, value){
+    this.headers[key] = value
   }
 
   build_url({ data = {} }, { attributes, sort, filter }){
