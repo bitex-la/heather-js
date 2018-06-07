@@ -1,6 +1,6 @@
 {
-  "name": "jsonapi-client",
-  "version": "1.0.0",
+  "name": "heather-js",
+  "version": "0.1.0",
   "description": "JsonApi client according to jsonapi.org standard",
   "main": "dist/index.js",
   "scripts": {

@@ -4,6 +4,7 @@ import { fromJS } from 'immutable'
 import pluralize from 'pluralize'
 
 const minimum_data = fromJS({ data: {} })
+const snakeToCamel = (s) => s.replace(/(\_\w)/g, (m) => m[1].toUpperCase())
 
 export default class Client {
   constructor(base_url, { use_plural = true } = {}){
@@ -130,7 +131,7 @@ export default class Client {
   find(params){
     return new Promise((resolve, reject) => {
       axios(this.build_request_find(params)).then(
-        response => resolve(this.deserialize(response.data, params.attributes))
+        response => resolve(this.deserialize(response.data.data, params.attributes))
       ).catch(
         error => reject(error)
       )
@@ -185,7 +186,7 @@ export default class Client {
   deserialize(response, params = {}){
     let obj
     try {
-      const class_name = _.capitalize(pluralize.singular(response.type))
+      const class_name = _.capitalize(pluralize.singular(snakeToCamel(response.type)))
       const klass = this.models.find((model) => model.name === class_name)
 
       obj = new klass()
@@ -210,7 +211,9 @@ export default class Client {
 
     _.forEach(response.relationships, (value, key) => {
       if (_.has(obj, key)) {
-        obj[key] = this.deserialize(value.data)
+        obj[key] = (_.isArray(obj[key])) ?
+          _.map(value.data, elem => this.deserialize(elem))
+          : this.deserialize(value.data)
       }
     })
 
