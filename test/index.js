@@ -325,6 +325,12 @@ describe('jsonapi-client', function(){
     expect(request.url).to.include('scope=this_scope')
   })
 
+  it('should specify a custom path to nest resources', () => {
+    const request = client.buildRequestFind({type: 'cat', id:'2', path: 'friends'})
+
+    expect(request.url).to.equal('http://anyapi.com/cat/2/friends/')
+  })
+
   it('should admit pagination in findAll', () => {
     const receivedCat = client.deserializeArray(catsResponseWithLinks)
 
