@@ -4,7 +4,6 @@ import { fromJS } from 'immutable'
 import pluralize from 'pluralize'
 
 const minimumData = fromJS({ data: {} })
-const snakeToCamel = (s) => s.replace(/(\_\w)/g, (m) => m[1].toUpperCase())
 
 export default class Client {
   constructor(baseUrl, { usePlural = true } = {}){
@@ -131,7 +130,7 @@ export default class Client {
   find(params){
     return new Promise((resolve, reject) => {
       axios(this.buildRequestFind(params)).then(
-        response => resolve(this.deserialize(response.data.data, params.attributes))
+        response => resolve(this.deserialize(response.data, params.attributes))
       ).catch(
         error => reject(error)
       )
@@ -183,47 +182,56 @@ export default class Client {
     return axios(request)
   }
 
-  deserialize(response, params = {}){
+  deserialize({ data, included = [] }, params = {}){
     let obj
+    let { links = {}, relationships = {}} = data
     try {
-      const className = _.capitalize(pluralize.singular(snakeToCamel(response.type)))
+      const className = _.upperFirst(pluralize.singular(_.camelCase(data.type)))
       const klass = this.models.find((model) => model.name === className)
 
       obj = new klass()
     } catch(e) {
-      obj = { type: response.type }
+      obj = { type: data.type }
     }
 
-    obj.id = response.id
+    obj.id = data.id
 
-    _.forEach(response.attributes, (value, key) => {
+    _.forEach(data.attributes, (value, key) => {
       if(!params.attributes || _.includes(params.attributes, key)) {
         obj[key] = value
       }
     })
 
-    if (response.links) {
-      obj.links = _.omit(response.links, 'first', 'last', 'prev', 'next')
-      if (response.links.self) {
-        obj.refresh = () => this.customRequest({ url: response.links.self })
+    if (!_.isEmpty(links)) {
+      obj.links = _.omit(links, 'first', 'last', 'prev', 'next')
+      if (links.self) {
+        obj.refresh = () => this.customRequest({ url: links.self })
       }
     }
 
-    _.forEach(response.relationships, (value, key) => {
+    _.forEach(relationships, (value, key) => {
       if (_.has(obj, key)) {
         obj[key] = (_.isArray(obj[key])) ?
-          _.map(value.data, elem => this.deserialize(elem))
-          : this.deserialize(value.data)
+          _.map(value.data, elem => this.deserializeRelationship(elem, included))
+          : this.deserializeRelationship(value.data, included)
       }
     })
 
     return obj
   }
 
-  deserializeArray(data, klass){
-    const response = _.map(data, elem => this.deserialize(elem, klass))
+  deserializeRelationship(elem, included = []){
+    const includedElem = _.find(included, (e) => e.type == elem.type && e.id == elem.id)
+    if(includedElem){
+      elem.attributes = includedElem.attributes
+    }
+    return this.deserialize({data: elem})
+  }
 
-    const paginationLinks = _.pick(data.links, 'first', 'last', 'prev', 'next')
+  deserializeArray({ data, links = [], included = [] }, klass){
+    const response = _.map(data, elem => this.deserialize({data: elem, included}, klass))
+
+    const paginationLinks = _.pick(links, 'first', 'last', 'prev', 'next')
     _.forOwn(paginationLinks, (value, key) => {
       response[key] = () => this.customRequest({ url: value })
     })

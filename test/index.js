@@ -35,46 +35,54 @@ describe('jsonapi-client', function(){
     puppy = new Dog(1, 2)
     puppy2 = new Dog(2, 3)
     dogResponse = {
-      type: 'dog',
-      id: 1,
-      attributes: {
-        age: 2
-      }
-    }
-    dogsResponse = [
-      {
+      data: {
         type: 'dog',
         id: 1,
         attributes: {
           age: 2
         }
-      },
-      {
-        type: 'dog',
-        id: 2,
-        attributes: {
-          age: 3
-        }
       }
-    ]
+    }
+    dogsResponse = {
+      data: [
+        {
+          type: 'dog',
+          id: 1,
+          attributes: {
+            age: 2
+          }
+        },
+        {
+          type: 'dog',
+          id: 2,
+          attributes: {
+            age: 3
+          }
+        }
+      ]
+    }
     kitten = new Cat(1, 2, puppy)
     catResponse = {
-      type: 'cat',
-      id: 1,
-      attributes: {
-        age: 2,
-        color: 'white'
+      data: {
+        type: 'cat',
+        id: 1,
+        attributes: {
+          age: 2,
+          color: 'white'
+        }
       }
     }
     catResponseWithLinks = {
-      type: 'cats',
-      id: 2,
-      attributes: {
-        age: 2,
-        color: 'white'
-      },
-      links: {
-        self: 'http://anyapi.com/cat/2/'
+      data: {
+        type: 'cats',
+        id: 2,
+        attributes: {
+          age: 2,
+          color: 'white'
+        },
+        links: {
+          self: 'http://anyapi.com/cat/2/'
+        }
       }
     }
     catsResponseWithLinks = {
@@ -91,28 +99,36 @@ describe('jsonapi-client', function(){
       }]
     }
     catResponseWithRelationships = {
-      type: 'cats',
-      id: 1,
-      attributes: {
-        age: 2
-      },
-      relationships: {
-        friend: {
-          data: {
-            type: 'dogs',
-            id: 1,
-            attributes: {
-              age: 2
+      data: {
+        type: 'cats',
+        id: 1,
+        attributes: {
+          age: 2
+        },
+        relationships: {
+          friend: {
+            data: {
+              type: 'dogs',
+              id: 1
             }
           }
         }
-      }
+      },
+      included: [{
+        type: 'dogs',
+        id: 1,
+        attributes: {
+          age: 2
+        }
+      }]
     }
     horseResponse = {
-      type: 'horse',
-      id: 1,
-      attributes: {
-        age: 2
+      data: {
+        type: 'horse',
+        id: 1,
+        attributes: {
+          age: 2
+        }
       }
     }
   })
