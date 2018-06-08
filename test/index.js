@@ -319,6 +319,12 @@ describe('jsonapi-client', function(){
     expect(request.url).to.include('filter=age>2')
   })
 
+  it('should specify a custom parameters in the url', () => {
+    const request = client.buildRequestFind({type: 'cat', customParams: {scope: 'this_scope'}})
+
+    expect(request.url).to.include('scope=this_scope')
+  })
+
   it('should admit pagination in findAll', () => {
     const receivedCat = client.deserializeArray(catsResponseWithLinks)
 

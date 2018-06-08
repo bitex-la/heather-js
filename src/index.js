@@ -34,7 +34,7 @@ export default class Client {
     this.headers[key] = value
   }
 
-  buildUrl({ data = {} }, { attributes, sort, filter }){
+  buildUrl({ data = {} }, { attributes, sort, filter, customParams }){
     let url = this.baseUrl
 
     url += (data.type) ? data.type + '/' : ''
@@ -57,6 +57,10 @@ export default class Client {
 
     if (filter) {
       suffixes.push('filter=' + filter)
+    }
+
+    if (customParams) {
+      _.forOwn(customParams, (value, key) => suffixes.push(key + '=' + value))
     }
 
     url += (!_.isEmpty(suffixes)) ? '?' + suffixes.join('&') : ''
@@ -97,16 +101,16 @@ export default class Client {
       resourceType
   }
 
-  buildRequestFind({ type, id = 0, meta, attributes, sort, filter } = {}){
+  buildRequestFind({ type, id = 0, meta, attributes, sort, filter, customParams } = {}){
     const resource = { id }
     const data = this.buildData({ resource, type })
-    const urlParams = { attributes, sort, filter }
+    const urlParams = { attributes, sort, filter, customParams }
     return this.buildRequest({ method: 'GET', data, meta, urlParams })
   }
 
-  buildRequestFindAll({ type, attributes, sort, filter }){
+  buildRequestFindAll({ type, attributes, sort, filter, customParams }){
     const data = this.buildData({ type })
-    const urlParams = { attributes, sort, filter }
+    const urlParams = { attributes, sort, filter, customParams }
     return this.buildRequest({ method: 'GET', data, urlParams })
   }
 
