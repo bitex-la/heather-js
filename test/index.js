@@ -395,4 +395,43 @@ describe('jsonapi-client', function(){
     expect(request.headers).to.have.property('Authorization')
     expect(request.headers['Authorization']).to.equal('mytoken')
   })
+
+  it('should allow custom action for collections', () => {
+    const request = client.buildRequestCustomAction({type: 'dogs', action: 'walk', resource: [puppy, puppy2]})
+    expect(request.url).to.equal('http://anyapi.com/dogs/walk/')
+    expect(request.method).to.equal('POST')
+    expect(request.data).to.eql([
+      {
+        data: {
+          type: 'dogs',
+          id: 1,
+          attributes: {
+            age: 2
+          }
+        }
+      },
+      {
+        data: {
+          type: 'dogs',
+          id: 2,
+          attributes: {
+            age: 3
+          }
+        }
+      }
+    ])
+  })
+
+  it('should allow custom action for individuals', () => {
+    const request = client.buildRequestCustomAction({resource: puppy, action: 'eat', method: 'PATCH'})
+    expect(request.url).to.equal('http://anyapi.com/dogs/1/eat/')
+    expect(request.method).to.equal('PATCH')
+    expect(request.data.data).to.eql({
+      type: 'dogs',
+      id: 1,
+      attributes: {
+        age: 2
+      }
+    })
+  })
 })

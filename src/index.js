@@ -34,11 +34,13 @@ export default class Client {
     this.headers[key] = value
   }
 
-  buildUrl({ data = {} }, { attributes, sort, filter, customParams, path }){
+  buildUrl({ data = {} }, { attributes, sort, filter, customParams, path, action, resource_id }){
     let url = this.baseUrl
+    resource_id = resource_id || data.id
 
     url += (path) ? path + '/' : ''
-    url += (data.id) ? data.id + '/' : ''
+    url += (resource_id) ? resource_id + '/' : ''
+    url += (action) ? action + '/' : ''
 
     let suffixes = []
 
@@ -71,7 +73,7 @@ export default class Client {
   buildData({ resource, type, attributes = [] }){
     let result = minimumData.toJS()
 
-    result.data.type = type || this.inferType(resource)
+    result.data.type = _.isString(type) ? type : this.inferType(resource)
 
     if (resource) {
       if (resource.id) {
@@ -95,7 +97,7 @@ export default class Client {
   }
 
   inferType(resource) {
-    const resourceType = resource.constructor.name.toLowerCase()
+    const resourceType = (resource) ? resource.constructor.name.toLowerCase() : ''
     return (this.usePlural) ?
       pluralize(resourceType) :
       resourceType
@@ -157,6 +159,18 @@ export default class Client {
     return this.buildRequest({ method: 'DELETE', data, urlParams })
   }
 
+  buildRequestCustomAction({ resource, type, action, method = 'POST', ...extra }){
+    const data = (_.isArray(resource))
+      ? resource.map(
+        (res) => this.buildData({ resource: res, type })
+      )
+      : this.buildData({ resource, type })
+    const path = this.buildPath({ resource, type, extra })
+    const resource_id = (resource) ? resource.id : null
+    const urlParams = { path, action, resource_id }
+    return this.buildRequest({ method, data, urlParams, resource_id })
+  }
+
   // These were split into the method and a build method to be able to test the
   // requests without mocking the network
   find(params){
@@ -202,6 +216,16 @@ export default class Client {
   delete(params){
     return new Promise((resolve, reject) => {
       axios(this.buildRequestDelete(params)).then(
+        response => resolve(response.data)
+      ).catch(
+        error => reject(error)
+      )
+    })
+  }
+
+  customAction(params){
+    return new Promise((resolve, reject) => {
+      axios(this.buildRequestCustomAction(params)).then(
         response => resolve(response.data)
       ).catch(
         error => reject(error)
