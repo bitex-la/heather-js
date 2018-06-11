@@ -20,6 +20,16 @@ class Cat {
   }
 }
 
+class Owner{
+  constructor(){
+    this.name = null
+  }
+
+  static path({dog_id}){
+    return `dogs/${dog_id}/owner`
+  }
+}
+
 describe('jsonapi-client', function(){
   let client
   let puppy, puppy2, kitten
@@ -325,10 +335,10 @@ describe('jsonapi-client', function(){
     expect(request.url).to.include('scope=this_scope')
   })
 
-  it('should specify a custom path to nest resources', () => {
-    const request = client.buildRequestFind({type: 'cat', id:'2', path: 'friends'})
+  it('should request correctly to a class with custom path', () => {
+    const request = client.buildRequestFind({type: Owner, id:'1', dog_id: '2'})
 
-    expect(request.url).to.equal('http://anyapi.com/cat/2/friends/')
+    expect(request.url).to.equal('http://anyapi.com/dogs/2/owner/1/')
   })
 
   it('should admit pagination in findAll', () => {

@@ -37,9 +37,8 @@ export default class Client {
   buildUrl({ data = {} }, { attributes, sort, filter, customParams, path }){
     let url = this.baseUrl
 
-    url += (data.type) ? data.type + '/' : ''
-    url += (data.id) ? data.id + '/' : ''
     url += (path) ? path + '/' : ''
+    url += (data.id) ? data.id + '/' : ''
 
     let suffixes = []
 
@@ -82,7 +81,7 @@ export default class Client {
 
       _.forOwn(resource, (value, property) => {
         if (property !== 'id' && (_.isEmpty(attributes) || _.includes(attributes, property))) {
-          if (_.includes(this.models, value.constructor)) {
+          if (value && _.includes(this.models, value.constructor)) {
             result.relationships = result.relationships || {}
             result.relationships[property] = this.buildData({ resource: value })
           } else {
@@ -102,32 +101,60 @@ export default class Client {
       resourceType
   }
 
-  buildRequestFind({ type, id = 0, meta, attributes, sort, filter, customParams, path } = {}){
+  /**
+   * Builds the url path for the requested resource / type
+   *
+   * @param resource - Instance object of a defined model. Its class may or may
+   * not implement a custom path behaviour. If not, the class name in lowercase
+   * should be taken.
+   * @param type - This parameter is either a string or a class. If it's a string
+   * that string should be taken as path, but if it's a class we should take care
+   * of possible custom path building like the explained for resource.
+   * @param extra - Object with custom parameters to send into the custom path
+   * build method. Often an id that refers to the container of this model.
+   */
+  buildPath({ resource, type, extra}) {
+    if (_.isString(type)) return type
+    if (resource && _.isFunction(resource.constructor.path)) return resource.constructor.path(extra)
+    if (!type) return this.inferType(resource)
+    if (_.isFunction(type.path)) return type.path(extra)
+    return ''
+  }
+
+  buildRequestFind({ type, id = 0, meta, attributes, sort, filter, customParams, ...extra} = {}){
     const resource = { id }
     const data = this.buildData({ resource, type })
-    const urlParams = { attributes, sort, filter, customParams, path }
+    const path = this.buildPath({ resource, type, extra })
+    const urlParams = { attributes, customParams, path }
     return this.buildRequest({ method: 'GET', data, meta, urlParams })
   }
 
-  buildRequestFindAll({ type, attributes, sort, filter, customParams, path }){
+  buildRequestFindAll({ type, attributes, sort, filter, customParams, ...extra }){
     const data = this.buildData({ type })
+    const path = this.buildPath({ type, extra })
     const urlParams = { attributes, sort, filter, customParams, path }
     return this.buildRequest({ method: 'GET', data, urlParams })
   }
 
-  buildRequestUpdate({ resource, type, attributes }){
+  buildRequestUpdate({ resource, type, attributes, ...extra }){
     const data = this.buildData({ resource, type, attributes })
-    return this.buildRequest({ method: 'PATCH', data })
+    const path = this.buildPath({ resource, type, extra })
+    const urlParams = { attributes, path }
+    return this.buildRequest({ method: 'PATCH', data, urlParams })
   }
 
-  buildRequestCreate({ resource, type, attributes }){
+  buildRequestCreate({ resource, type, attributes, ...extra }){
     const data = this.buildData({ resource, type, attributes })
-    return this.buildRequest({ method: 'POST', data })
+    const path = this.buildPath({ resource, type, extra })
+    const urlParams = { attributes, path }
+    return this.buildRequest({ method: 'POST', data, urlParams })
   }
 
-  buildRequestDelete({ resource, type }){
+  buildRequestDelete({ resource, type, ...extra }){
     const data = this.buildData({ resource, type })
-    return this.buildRequest({ method: 'DELETE', data })
+    const path = this.buildPath({ resource, type, extra })
+    const urlParams = { path }
+    return this.buildRequest({ method: 'DELETE', data, urlParams })
   }
 
   // These were split into the method and a build method to be able to test the
@@ -234,7 +261,9 @@ export default class Client {
   }
 
   deserializeArray({ data, links = [], included = [] }, klass){
-    const response = _.map(data, elem => this.deserialize({data: elem, included}, klass))
+    const response = (_.isArray(data))
+      ? _.map(data, elem => this.deserialize({data: elem, included}, klass))
+      : this.deserialize({data, included}, klass)
 
     const paginationLinks = _.pick(links, 'first', 'last', 'prev', 'next')
     _.forOwn(paginationLinks, (value, key) => {
