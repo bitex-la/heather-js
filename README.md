@@ -13,10 +13,10 @@ npm run build:umd
 npm run biuld:umd.min
 ```
 
-##Usage
+## Usage
 To see a lot of examples of how to use this library, take a look at the tests.
 
-##Contributing
+## Contributing
 Contributions are always welcome.
 
 Before submitting a PR from your fork, make sure that all the previous tests are
