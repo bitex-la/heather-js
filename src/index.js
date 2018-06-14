@@ -6,9 +6,10 @@ import pluralize from 'pluralize'
 const minimumData = fromJS({ data: {} })
 
 export default class Client {
-  constructor(baseUrl, { usePlural = true } = {}){
+  constructor(baseUrl, { usePlural = true, useSnakeCase = true } = {}){
     this.baseUrl = (baseUrl.slice(-1) === '/') ? baseUrl : baseUrl + '/'
     this.usePlural = usePlural
+    this.useSnakeCase = useSnakeCase
     this.models = []
     this.headers = {'Content-Type': 'application/vnd.api+json'}
   }
@@ -97,10 +98,10 @@ export default class Client {
   }
 
   inferType(resource) {
-    const resourceType = (resource) ? resource.constructor.name.toLowerCase() : ''
-    return (this.usePlural) ?
-      pluralize(resourceType) :
-      resourceType
+    let resourceType = (resource) ? resource.constructor.name : ''
+    resourceType = (this.usePlural) ? pluralize(resourceType) : resourceType
+    resourceType = (this.useSnakeCase) ? _.snakeCase(resourceType) : _.toLower(resourceType)
+    return resourceType
   }
 
   /**

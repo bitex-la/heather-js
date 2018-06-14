@@ -20,7 +20,7 @@ class Cat {
   }
 }
 
-class Owner{
+class Owner {
   constructor(){
     this.name = null
   }
@@ -30,9 +30,16 @@ class Owner{
   }
 }
 
+class LongNameModel {
+  constructor(id, name){
+    this.id = id
+    this.name = name
+  }
+}
+
 describe('jsonapi-client', function(){
   let client
-  let puppy, puppy2, kitten
+  let puppy, puppy2, kitten, longNameEntity
   let dogResponse, dogsResponse
   let catResponse, catResponseWithLinks, catsResponseWithLinks, catResponseWithRelationships
   let horseResponse
@@ -41,6 +48,7 @@ describe('jsonapi-client', function(){
     client = new JsonApiClient('http://anyapi.com')
     client.define(Dog)
     client.define(Cat)
+    client.define(LongNameModel)
 
     puppy = new Dog(1, 2)
     puppy2 = new Dog(2, 3)
@@ -141,6 +149,7 @@ describe('jsonapi-client', function(){
         }
       }
     }
+    longNameEntity = new LongNameModel(1, 'a name')
   })
 
   afterEach(() => {
@@ -298,6 +307,17 @@ describe('jsonapi-client', function(){
     client.usePlural = false
     const request = client.buildRequestDelete({resource: puppy})
     expect(request.url).to.equal('http://anyapi.com/dog/1/')
+  })
+
+  it('should write the type in snake case by default', () => {
+    const request = client.buildRequestUpdate({resource: longNameEntity})
+    expect(request.url).to.equal('http://anyapi.com/long_name_models/1/')
+  })
+
+  it('should not write the type in snake case if explicitly specified', () => {
+    client.useSnakeCase = false
+    const request = client.buildRequestUpdate({resource: longNameEntity})
+    expect(request.url).to.equal('http://anyapi.com/longnamemodels/1/')
   })
 
   it('should deserialize inserting the links into the object', () => {
