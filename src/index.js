@@ -85,8 +85,8 @@ export default class Client {
       _.forOwn(resource, (value, property) => {
         if (property !== 'id' && (_.isEmpty(attributes) || _.includes(attributes, property))) {
           if (value && _.includes(this.models, value.constructor)) {
-            result.relationships = result.relationships || {}
-            result.relationships[property] = this.buildData({ resource: value })
+            result.data.relationships = result.data.relationships || {}
+            result.data.relationships[property] = this.buildData({ resource: value })
           } else {
             result.data.attributes[property] = value
           }

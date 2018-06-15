@@ -374,7 +374,7 @@ describe('jsonapi-client', function(){
   it('should serialize relationships on update', () => {
     const request = client.buildRequestUpdate({resource: kitten})
 
-    expect(request.data.relationships).to.eql({
+    expect(request.data.data.relationships).to.eql({
       friend: {
         data: {
           type: 'dogs',
@@ -390,7 +390,7 @@ describe('jsonapi-client', function(){
   it('should serialize relationships on create', () => {
     const request = client.buildRequestCreate({resource: kitten})
 
-    expect(request.data.relationships).to.eql({
+    expect(request.data.data.relationships).to.eql({
       friend: {
         data: {
           type: 'dogs',
