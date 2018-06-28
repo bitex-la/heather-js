@@ -1,5 +1,14 @@
-# HeatherJS
+HeatherJS
+=========
+
 Client to consume an API with the http://jsonapi.org/ standard.
+
+## Installation
+```
+npm install --save heather-js
+```
+
+### Custom Build
 
 To build it, just run:
 ```
@@ -10,7 +19,7 @@ To build it for UMD (expanded or minified version, respectively), run:
 ```
 npm run build:umd
 
-npm run biuld:umd.min
+npm run build:umd.min
 ```
 
 ## Usage
