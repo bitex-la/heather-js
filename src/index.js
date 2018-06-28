@@ -244,7 +244,7 @@ export default class Client {
     let { links = {}, relationships = {}} = data
     try {
       const className = _.upperFirst(pluralize.singular(_.camelCase(data.type)))
-      const klass = this.models.find((model) => model.name === className)
+      const klass = this.models.find((model) => model.name === className || model.type === data.type)
 
       obj = new klass()
     } catch(e) {

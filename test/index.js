@@ -28,6 +28,10 @@ class Owner {
   static path({dog_id}){
     return `dogs/${dog_id}/owner`
   }
+
+  static get type(){
+    return 'ownerr'
+  }
 }
 
 class LongNameModel {
@@ -43,12 +47,14 @@ describe('jsonapi-client', function(){
   let dogResponse, dogsResponse
   let catResponse, catResponseWithLinks, catsResponseWithLinks, catResponseWithRelationships
   let horseResponse
+  let ownerResponse
 
   beforeEach(() => {
     client = new JsonApiClient('http://anyapi.com')
     client.define(Dog)
     client.define(Cat)
     client.define(LongNameModel)
+    client.define(Owner)
 
     puppy = new Dog(1, 2)
     puppy2 = new Dog(2, 3)
@@ -150,6 +156,15 @@ describe('jsonapi-client', function(){
       }
     }
     longNameEntity = new LongNameModel(1, 'a name')
+    ownerResponse = {
+      data: {
+        type: 'ownerr',
+        id: 1,
+        attributes: {
+          name: 'John'
+        }
+      }
+    }
   })
 
   afterEach(() => {
@@ -453,5 +468,11 @@ describe('jsonapi-client', function(){
         age: 2
       }
     })
+  })
+
+  it('should deserialize taking into account custom types', () => {
+    const receivedOwner = client.deserialize(ownerResponse)
+
+    expect(receivedOwner).to.be.an.instanceof(Owner)
   })
 })
