@@ -335,6 +335,11 @@ describe('jsonapi-client', function(){
     expect(request.url).to.equal('http://anyapi.com/longnamemodels/1/')
   })
 
+  it('should write the type if only the type is given', () => {
+    const request = client.buildRequestFindAll({type: LongNameModel})
+    expect(request.url).to.equal('http://anyapi.com/long_name_models/')
+  })
+
   it('should deserialize inserting the links into the object', () => {
     const receivedCat = client.deserialize(catResponseWithLinks)
 

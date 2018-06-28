@@ -121,6 +121,7 @@ export default class Client {
     if (resource && _.isFunction(resource.constructor.path)) return resource.constructor.path(extra)
     if (!type) return this.inferType(resource)
     if (_.isFunction(type.path)) return type.path(extra)
+    if (this.models.includes(type)) return this.inferType(new type())
     return ''
   }
 
