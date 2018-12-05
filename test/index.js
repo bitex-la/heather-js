@@ -45,7 +45,8 @@ describe('jsonapi-client', function(){
   let client
   let puppy, puppy2, kitten, longNameEntity
   let dogResponse, dogsResponse
-  let catResponse, catResponseWithLinks, catsResponseWithLinks, catResponseWithRelationships
+  let catResponse, catResponseWithLinks, catsResponseWithLinks
+  let catResponseWithRelationships
   let horseResponse
   let ownerResponse
 
@@ -239,7 +240,9 @@ describe('jsonapi-client', function(){
   })
 
   it('should allow meta data', () => {
-    const request = client.buildRequestFind({type: 'dog', id: 1, meta: {metaField: 'metaValue'}})
+    const request = client.buildRequestFind({type: 'dog', id: 1, meta: {
+      metaField: 'metaValue'
+    }})
 
     expect(request.meta).to.eql({
       metaField: 'metaValue'
@@ -269,7 +272,9 @@ describe('jsonapi-client', function(){
   })
 
   it('should serialize only whitelisted attributes if specified', () => {
-    const request = client.buildRequestUpdate({resource: kitten, attributes: ['age']})
+    const request = client.buildRequestUpdate({
+      resource: kitten, attributes: ['age']
+    })
 
     expect(request.data.data).to.eql({
       type: 'cats',
@@ -287,13 +292,17 @@ describe('jsonapi-client', function(){
   })
 
   it('should ask only for whitelisted attributes if specified', () => {
-    const request = client.buildRequestFind({type: 'cat', id: 1, attributes: ['age', 'color']})
+    const request = client.buildRequestFind({type: 'cat', id: 1, attributes: [
+      'age', 'color'
+    ]})
 
     expect(request.url).to.include('fields[cat]=age,color')
   })
 
-  it('should ask only for whitelisted attributes if specified on findAll', () => {
-    const request = client.buildRequestFindAll({type: 'cat', attributes: ['age', 'color']})
+  it('should ask only for whitelisted attributes specified on findAll', () => {
+    const request = client.buildRequestFindAll({type: 'cat', attributes: [
+      'age', 'color'
+    ]})
 
     expect(request.url).to.include('fields[cat]=age,color')
   })
@@ -357,20 +366,34 @@ describe('jsonapi-client', function(){
   })
 
   it('should specify the sorting in the url', () => {
-    const sortingObject = [{ attribute: 'age', orientation: 'desc'}, { attribute: 'color'}]
-    const request = client.buildRequestFindAll({type: 'cat', sort: sortingObject})
+    const sort = [
+      { attribute: 'age', orientation: 'desc'},
+      { attribute: 'color' }
+    ]
+    const request = client.buildRequestFindAll({type: 'cat', sort: sort})
 
     expect(request.url).to.include('sort=-age,color')
   })
 
-  it('should specify a filter parameter in the url without modifying it', () => {
+  it('should specify a filter parameter in the url', () => {
     const request = client.buildRequestFindAll({type: 'cat', filter: 'age>2'})
 
     expect(request.url).to.include('filter=age>2')
   })
 
+  it('should specify a filter parameter with an object', () => {
+    const request = client.buildRequestFindAll(
+      {type: 'cat', filter: {age: 2, name: 'mishi'}}
+    )
+
+    expect(request.url).to.include('filter[age]=2')
+    expect(request.url).to.include('filter[name]=mishi')
+  })
+
   it('should specify a custom parameters in the url', () => {
-    const request = client.buildRequestFind({type: 'cat', customParams: {scope: 'this_scope'}})
+    const request = client.buildRequestFind(
+      {type: 'cat', customParams: {scope: 'this_scope'}}
+    )
 
     expect(request.url).to.include('scope=this_scope')
   })
@@ -437,7 +460,9 @@ describe('jsonapi-client', function(){
   })
 
   it('should allow custom action for collections', () => {
-    const request = client.buildRequestCustomAction({type: 'dogs', action: 'walk', resource: [puppy, puppy2]})
+    const request = client.buildRequestCustomAction(
+      {type: 'dogs', action: 'walk', resource: [puppy, puppy2]}
+    )
     expect(request.url).to.equal('http://anyapi.com/dogs/walk/')
     expect(request.method).to.equal('POST')
     expect(request.data).to.eql([
@@ -463,7 +488,9 @@ describe('jsonapi-client', function(){
   })
 
   it('should allow custom action for individuals', () => {
-    const request = client.buildRequestCustomAction({resource: puppy, action: 'eat', method: 'PATCH'})
+    const request = client.buildRequestCustomAction(
+      {resource: puppy, action: 'eat', method: 'PATCH'}
+    )
     expect(request.url).to.equal('http://anyapi.com/dogs/1/eat/')
     expect(request.method).to.equal('PATCH')
     expect(request.data.data).to.eql({
