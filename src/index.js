@@ -59,7 +59,13 @@ export default class Client {
     }
 
     if (filter) {
-      suffixes.push('filter=' + filter)
+      if (typeof filter === 'object'){
+        for (let key in filter){
+          suffixes.push(`filter[${key}]=${filter[key]}`)
+        }
+      } else {
+        suffixes.push(`filter=${filter}`)
+      }
     }
 
     if (customParams) {

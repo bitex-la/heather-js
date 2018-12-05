@@ -369,6 +369,13 @@ describe('jsonapi-client', function(){
     expect(request.url).to.include('filter=age>2')
   })
 
+  it('should specify a filter parameter with an object', () => {
+    const request = client.buildRequestFindAll({type: 'cat', filter: {age: 2, name: 'mishi'}})
+
+    expect(request.url).to.include('filter[age]=2')
+    expect(request.url).to.include('filter[name]=mishi')
+  })
+
   it('should specify a custom parameters in the url', () => {
     const request = client.buildRequestFind({type: 'cat', customParams: {scope: 'this_scope'}})
 
