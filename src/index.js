@@ -18,7 +18,9 @@ export default class Client {
     this.models.push(model)
   }
 
-  buildRequest({ method = '', data = minimumData.toJS(), meta = {}, urlParams = {}} = {}){
+  buildRequest({
+    method = '', data = minimumData.toJS(), meta = {}, urlParams = {}
+  } = {}){
 
     const url = this.buildUrl(data, urlParams)
 
@@ -35,7 +37,9 @@ export default class Client {
     this.headers[key] = value
   }
 
-  buildUrl({ data = {} }, { attributes, sort, filter, customParams, path, action, resource_id }){
+  buildUrl({ data = {} }, {
+    attributes, sort, filter, customParams, path, action, resource_id
+  }){
     let url = this.baseUrl
     resource_id = resource_id || data.id
 
@@ -51,7 +55,10 @@ export default class Client {
 
     if (sort) {
       const sortStrings = sort.map((sortingObject) =>
-        (sortingObject.orientation && sortingObject.orientation.toLowerCase() === 'desc') ?
+        (
+          sortingObject.orientation && 
+          sortingObject.orientation.toLowerCase() === 'desc'
+        ) ?
           '-' + sortingObject.attribute :
           sortingObject.attribute
       )
@@ -89,10 +96,15 @@ export default class Client {
       result.data.attributes = {}
 
       _.forOwn(resource, (value, property) => {
-        if (property !== 'id' && (_.isEmpty(attributes) || _.includes(attributes, property))) {
+        if (
+          property !== 'id' && 
+          (_.isEmpty(attributes) || _.includes(attributes, property))
+        ) {
           if (value && _.includes(this.models, value.constructor)) {
             result.data.relationships = result.data.relationships || {}
-            result.data.relationships[property] = this.buildData({ resource: value })
+            result.data.relationships[property] = this.buildData({
+              resource: value
+            })
           } else {
             result.data.attributes[property] = value
           }
@@ -106,7 +118,8 @@ export default class Client {
   inferType(resource) {
     let resourceType = (resource) ? resource.constructor.name : ''
     resourceType = (this.usePlural) ? pluralize(resourceType) : resourceType
-    resourceType = (this.useSnakeCase) ? _.snakeCase(resourceType) : _.toLower(resourceType)
+    resourceType = (this.useSnakeCase) ?
+      _.snakeCase(resourceType) : _.toLower(resourceType)
     return resourceType
   }
 
@@ -116,22 +129,26 @@ export default class Client {
    * @param resource - Instance object of a defined model. Its class may or may
    * not implement a custom path behaviour. If not, the class name in lowercase
    * should be taken.
-   * @param type - This parameter is either a string or a class. If it's a string
-   * that string should be taken as path, but if it's a class we should take care
-   * of possible custom path building like the explained for resource.
+   * @param type - This parameter is either a string or a class. If it's a 
+   * string that string should be taken as path, but if it's a class we should
+   * take care of possible custom path building like the explained for resource.
    * @param extra - Object with custom parameters to send into the custom path
    * build method. Often an id that refers to the container of this model.
    */
   buildPath({ resource, type, extra}) {
     if (_.isString(type)) return type
-    if (resource && _.isFunction(resource.constructor.path)) return resource.constructor.path(extra)
+    if (resource && _.isFunction(resource.constructor.path)) {
+      return resource.constructor.path(extra)
+    }
     if (!type) return this.inferType(resource)
     if (_.isFunction(type.path)) return type.path(extra)
     if (this.models.includes(type)) return this.inferType(new type())
     return ''
   }
 
-  buildRequestFind({ type, id = 0, meta, attributes, sort, filter, customParams, ...extra} = {}){
+  buildRequestFind({
+    type, id = 0, meta, attributes, customParams, ...extra
+  } = {}){
     const resource = { id }
     const data = this.buildData({ resource, type })
     const path = this.buildPath({ resource, type, extra })
@@ -139,7 +156,9 @@ export default class Client {
     return this.buildRequest({ method: 'GET', data, meta, urlParams })
   }
 
-  buildRequestFindAll({ type, attributes, sort, filter, customParams, ...extra }){
+  buildRequestFindAll({
+    type, attributes, sort, filter, customParams, ...extra
+  }){
     const data = this.buildData({ type })
     const path = this.buildPath({ type, extra })
     const urlParams = { attributes, sort, filter, customParams, path }
@@ -167,7 +186,9 @@ export default class Client {
     return this.buildRequest({ method: 'DELETE', data, urlParams })
   }
 
-  buildRequestCustomAction({ resource, type, action, method = 'POST', ...extra }){
+  buildRequestCustomAction({
+    resource, type, action, method = 'POST', ...extra
+  }){
     const data = (_.isArray(resource))
       ? resource.map(
         (res) => this.buildData({ resource: res, type })
@@ -194,7 +215,9 @@ export default class Client {
   findAll(params){
     return new Promise((resolve, reject) => {
       axios(this.buildRequestFindAll(params)).then(
-        response => resolve(this.deserializeArray(response.data, params.attributes))
+        response => resolve(this.deserializeArray(
+          response.data, params.attributes
+        ))
       ).catch(
         error => reject(error)
       )
@@ -251,7 +274,9 @@ export default class Client {
     let { links = {}, relationships = {}} = data
     try {
       const className = _.upperFirst(pluralize.singular(_.camelCase(data.type)))
-      const klass = this.models.find((model) => model.name === className || model.type === data.type)
+      const klass = this.models.find(
+        (model) => model.name === className || model.type === data.type
+      )
 
       obj = new klass()
     } catch(e) {
@@ -276,7 +301,10 @@ export default class Client {
     _.forEach(relationships, (value, key) => {
       if (_.has(obj, key)) {
         obj[key] = (_.isArray(obj[key])) ?
-          _.map(value.data, elem => this.deserializeRelationship(elem, included))
+          _.map(
+            value.data,
+            elem => this.deserializeRelationship(elem, included)
+          )
           : this.deserializeRelationship(value.data, included)
       }
     })
@@ -285,7 +313,10 @@ export default class Client {
   }
 
   deserializeRelationship(elem, included = []){
-    const includedElem = _.find(included, (e) => e.type == elem.type && e.id == elem.id)
+    const includedElem = _.find(
+      included,
+      (e) => e.type == elem.type && e.id == elem.id
+    )
     if(includedElem){
       elem.attributes = includedElem.attributes
     }
