@@ -23,6 +23,7 @@ export default class Client {
   } = {}){
 
     const url = this.buildUrl(data, urlParams)
+    if (method === 'GET') data = null
 
     return {
       url,
