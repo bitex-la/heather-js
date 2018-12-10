@@ -23,7 +23,7 @@ npm run build:umd.min
 ```
 
 ## Usage
-To see a lot of examples of how to use this library, take a look at the tests.
+To see a lot of examples of how to use this library, take a look at the [tests](/test/index.js).
 
 ## Contributing
 Contributions are always welcome.
