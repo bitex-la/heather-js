@@ -208,9 +208,11 @@ describe('jsonapi-client', function(){
     expect(request.method).to.equal('DELETE')
   })
 
-  it('should always send a data attribute', () => {
+  it('should always send a data attribute except with GET', () => {
     const request = client.buildRequest()
     expect(request.data).to.have.property('data')
+    const getRequest = client.buildRequest({method: 'GET'})
+    expect(getRequest.data).to.be.null
   })
 
   it('should parse an object into the data as a resource', () => {
