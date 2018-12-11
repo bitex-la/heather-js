@@ -504,6 +504,15 @@ describe('jsonapi-client', function(){
     })
   })
 
+  it('should allow filters in custom action', () => {
+    const request = client.buildRequestCustomAction(
+      {type: Dog, action: 'eat', filter: {breed: 'doberman'}}
+    )
+    expect(request.url).to.equal(
+      'http://anyapi.com/dogs/eat/?filter[breed]=doberman'
+    )
+  })
+
   it('should deserialize taking into account custom types', () => {
     const receivedOwner = client.deserialize(ownerResponse)
 

@@ -51,7 +51,7 @@ export default class Client {
     let suffixes = []
 
     if (attributes) {
-      suffixes.push('fields[' + data.type + ']=' + attributes.join(','))
+      suffixes.push(`fields[${data.type}]=` + attributes.join(','))
     }
 
     if (sort) {
@@ -68,9 +68,9 @@ export default class Client {
 
     if (filter) {
       if (typeof filter === 'object'){
-        for (let key in filter){
-          suffixes.push(`filter[${key}]=${filter[key]}`)
-        }
+        _.forEach(filter, (value, key) => {
+          suffixes.push(`filter[${key}]=${value}`)
+        })
       } else {
         suffixes.push(`filter=${filter}`)
       }
@@ -188,7 +188,7 @@ export default class Client {
   }
 
   buildRequestCustomAction({
-    resource, type, action, method = 'POST', ...extra
+    resource, type, action, filter, method = 'POST', ...extra
   }){
     const data = (_.isArray(resource))
       ? resource.map(
@@ -197,7 +197,7 @@ export default class Client {
       : this.buildData({ resource, type })
     const path = this.buildPath({ resource, type, extra })
     const resource_id = (resource) ? resource.id : null
-    const urlParams = { path, action, resource_id }
+    const urlParams = { path, action, resource_id, filter }
     return this.buildRequest({ method, data, urlParams, resource_id })
   }
 
