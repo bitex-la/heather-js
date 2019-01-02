@@ -6,6 +6,13 @@ import pluralize from 'pluralize'
 const minimumData = fromJS({ data: {} })
 
 export default class Client {
+  /**
+   * Create the Client.
+   * @param {string} baseUrl 
+   * @param {object} [config] - client's configuration object
+   * @param {boolean} [config.usePlural] - use plurals for models paths
+   * @param {boolean} [config.useSnakeCase] - use snake case for models paths
+   */
   constructor(baseUrl, { usePlural = true, useSnakeCase = true } = {}){
     this.baseUrl = (baseUrl.slice(-1) === '/') ? baseUrl : baseUrl + '/'
     this.usePlural = usePlural
@@ -14,10 +21,23 @@ export default class Client {
     this.headers = {'Content-Type': 'application/vnd.api+json'}
   }
 
+  /**
+   * Define models to be understood by the client.
+   * @param {class} model 
+   */
   define(model){
     this.models.push(model)
   }
 
+  /**
+   * @private
+   * Build axios request based on method, data, and params.
+   * @param request
+   * @param {string} request.method - HTTP method to execute.
+   * @param {object} request.data - Payload.
+   * @param {object} [request.meta] - Meta field of JSON:API.
+   * @param {object} [request.urlParams] - Params to be included in the URL.
+   */
   buildRequest({
     method = '', data = minimumData.toJS(), meta = {}, urlParams = {}
   } = {}){
@@ -34,10 +54,30 @@ export default class Client {
     }
   }
 
+  /**
+   * Set header to be used by the client in every request.
+   * @param {string} key 
+   * @param {string} value 
+   */
   setHeader(key, value){
     this.headers[key] = value
   }
 
+  /**
+   * @private
+   * Build the URL for the resource and action specified.
+   * @param {object} [resource]
+   * @param {object} [resource.data]
+   * @param {object} [requestConfig]
+   * @param {string[]} [requestConfig.attributes]
+   * @param {object[]} [requestConfig.sort] - Each object should have an 
+   * 'attribute' field and an 'orientation' field (or none for 'ASC').
+   * @param {string|object} [requestConfig.filter] - Raw filter or key-value
+   * filter respectively.
+   * @param {object} [requestConfig.customParams] - Key-value pairs to be 
+   * included in the URL.
+   * @param 
+   */
   buildUrl({ data = {} }, {
     attributes, sort, filter, customParams, path, action, resource_id
   }){
@@ -85,6 +125,14 @@ export default class Client {
     return url
   }
 
+  /**
+   * @private
+   * Build the payload to be sent based on the resource provided
+   * @param {object} data
+   * @param {object} [data.resource] - Resource to build the data from
+   * @param {string} [data.type]
+   * @param {string[]} [data.attributes]
+   */
   buildData({ resource, type, attributes = [] }){
     let result = minimumData.toJS()
 
@@ -116,6 +164,11 @@ export default class Client {
     return result
   }
 
+  /**
+   * @private
+   * Infers the type of an object (based on its prototype)
+   * @param {object} resource 
+   */
   inferType(resource) {
     let resourceType = (resource) ? resource.constructor.name : ''
     resourceType = (this.usePlural) ? pluralize(resourceType) : resourceType
@@ -126,15 +179,15 @@ export default class Client {
 
   /**
    * Builds the url path for the requested resource / type
-   *
-   * @param resource - Instance object of a defined model. Its class may or may
-   * not implement a custom path behaviour. If not, the class name in lowercase
-   * should be taken.
-   * @param type - This parameter is either a string or a class. If it's a 
-   * string that string should be taken as path, but if it's a class we should
-   * take care of possible custom path building like the explained for resource.
-   * @param extra - Object with custom parameters to send into the custom path
-   * build method. Often an id that refers to the container of this model.
+   * @param {object} resource - Instance object of a defined model. Its class
+   * may or may not implement a custom path behaviour. If not, the class name in
+   * lowercase should be taken.
+   * @param {string|class} type - If it's a string that string should be taken
+   * as path, but if it's a class we should take care of possible custom path
+   * building like the explained for resource.
+   * @param {object} extra - Object with custom parameters to send into the
+   * custom path build method. Often an id that refers to the container of this
+   * model.
    */
   buildPath({ resource, type, extra}) {
     if (_.isString(type)) return type
@@ -147,6 +200,12 @@ export default class Client {
     return ''
   }
 
+  /**
+   * @private
+   * Build axios request for a find request.
+   * @param {object} requestConfig - Check find method to get a full description
+   * about the arguments.
+   */
   buildRequestFind({
     type, id = 0, meta, attributes, customParams, ...extra
   } = {}){
@@ -157,15 +216,27 @@ export default class Client {
     return this.buildRequest({ method: 'GET', data, meta, urlParams })
   }
 
+  /**
+   * @private
+   * Build axios request for a findAll request.
+   * @param {object} requestConfig - Check findAll method to get a full
+   * description about the arguments.
+   */
   buildRequestFindAll({
-    type, attributes, sort, filter, customParams, ...extra
+    type, meta, attributes, sort, filter, customParams, ...extra
   }){
     const data = this.buildData({ type })
     const path = this.buildPath({ type, extra })
     const urlParams = { attributes, sort, filter, customParams, path }
-    return this.buildRequest({ method: 'GET', data, urlParams })
+    return this.buildRequest({ method: 'GET', data, meta, urlParams })
   }
 
+  /**
+   * @private
+   * Build axios request for an update request.
+   * @param {object} requestConfig - Check update method to get a full
+   * description about the arguments.
+   */
   buildRequestUpdate({ resource, type, attributes, ...extra }){
     const data = this.buildData({ resource, type, attributes })
     const path = this.buildPath({ resource, type, extra })
@@ -173,6 +244,12 @@ export default class Client {
     return this.buildRequest({ method: 'PATCH', data, urlParams })
   }
 
+  /**
+   * @private
+   * Build axios request for a create request.
+   * @param {object} requestConfig - Check create method to get a full
+   * description about the arguments.
+   */
   buildRequestCreate({ resource, type, attributes, ...extra }){
     const data = this.buildData({ resource, type, attributes })
     const path = this.buildPath({ resource, type, extra })
@@ -180,6 +257,12 @@ export default class Client {
     return this.buildRequest({ method: 'POST', data, urlParams })
   }
 
+  /**
+   * @private
+   * Build axios request for a delete request.
+   * @param {object} requestConfig - Check delete method to get a full
+   * description about the arguments.
+   */
   buildRequestDelete({ resource, type, ...extra }){
     const data = this.buildData({ resource, type })
     const path = this.buildPath({ resource, type, extra })
@@ -187,6 +270,12 @@ export default class Client {
     return this.buildRequest({ method: 'DELETE', data, urlParams })
   }
 
+  /**
+   * @private
+   * Build axios request for a customAction request.
+   * @param {object} requestConfig - Check customAction method to get a full
+   * description about the arguments.
+   */
   buildRequestCustomAction({
     resource, type, action, filter, method = 'POST', ...extra
   }){
@@ -203,6 +292,21 @@ export default class Client {
 
   // These were split into the method and a build method to be able to test the
   // requests without mocking the network
+
+  /**
+   * Request a single resource of a certain type.
+   * @param {*} params 
+   * @param {string|class} params.type
+   * @param {number} params.id - ID of the resource to be fetched.
+   * @param {object} [params.meta] - Meta field of JSON:API.
+   * @param {string[]} [params.attributes] - Whitelist of attributes to
+   * fetch.
+   * @param {object} [params.customParams] - Key-value pairs to be 
+   * included in the URL.
+   * @param {object} [params.extra] - Object with custom parameters to
+   * send into the custom path build method. Often an id that refers to the
+   * container of this model.
+   */
   find(params){
     return new Promise((resolve, reject) => {
       axios(this.buildRequestFind(params)).then(
@@ -213,6 +317,22 @@ export default class Client {
     })
   }
 
+  /**
+   * Request all resources of a certain type.
+   * @param {object} params
+   * @param {string|class} params.type
+   * @param {object} [params.meta] - Meta field of JSON:API.
+   * @param {object[]} [params.sort] - Each object should have an 'attribute'
+   * field and an 'orientation' field (or none for 'ASC').
+   * @param {string|object} [params.filter] - Raw filter or key-value filter
+   * respectively.
+   * @param {string[]} [params.attributes] - Whitelist of attributes to fetch.
+   * @param {object} [params.customParams] - Key-value pairs to be included in
+   * the URL.
+   * @param {object} [params.extra] - Object with custom parameters to send into
+   * the custom path build method. Often an id that refers to the container of
+   * this model.
+   */
   findAll(params){
     return new Promise((resolve, reject) => {
       axios(this.buildRequestFindAll(params)).then(
@@ -225,6 +345,17 @@ export default class Client {
     })
   }
 
+  /**
+   * Update a resource. The resource should have an id assigned.
+   * @param {object} params
+   * @param {object} params.resource
+   * @param {string|class} [params.type]
+   * @param {object} [params.meta] - Meta field of JSON:API.
+   * @param {string[]} [params.attributes] - Whitelist of attributes to fetch.
+   * @param {object} [params.extra] - Object with custom parameters to send into
+   * the custom path build method. Often an id that refers to the container of
+   * this model.
+   */
   update(params){
     return new Promise((resolve, reject) => {
       axios(this.buildRequestUpdate(params)).then(
@@ -235,6 +366,17 @@ export default class Client {
     })
   }
 
+  /**
+   * Create a resource.
+   * @param {object} params
+   * @param {object} params.resource
+   * @param {string|class} [params.type]
+   * @param {object} [params.meta] - Meta field of JSON:API.
+   * @param {string[]} [params.attributes] - Whitelist of attributes to fetch.
+   * @param {object} [params.extra] - Object with custom parameters to send into
+   * the custom path build method. Often an id that refers to the container of
+   * this model.
+   */
   create(params){
     return new Promise((resolve, reject) => {
       axios(this.buildRequestCreate(params)).then(
@@ -245,6 +387,16 @@ export default class Client {
     })
   }
 
+  /**
+   * Delete a resource.
+   * @param {object} params
+   * @param {object} params.resource - Should have at list an id attribute.
+   * @param {string|class} [params.type]
+   * @param {object} [params.meta] - Meta field of JSON:API.
+   * @param {object} [params.extra] - Object with custom parameters to send into
+   * the custom path build method. Often an id that refers to the container of
+   * this model.
+   */
   delete(params){
     return new Promise((resolve, reject) => {
       axios(this.buildRequestDelete(params)).then(
@@ -255,6 +407,19 @@ export default class Client {
     })
   }
 
+  /**
+   * Perform a custom action
+   * @param {object} params
+   * @param {object|object[]} [params.resource]
+   * @param {string|class} [params.type]
+   * @param {string} params.action - Action to be performed. It will be appended
+   * at the end of the url path.
+   * @param {string} [params.method] - HTTP Method to execute. @default "POST"
+   * @param {object} [params.meta] - Meta field of JSON:API.
+   * @param {object} [params.extra] - Object with custom parameters to send into
+   * the custom path build method. Often an id that refers to the container of
+   * this model.
+   */
   customAction(params){
     return new Promise((resolve, reject) => {
       axios(this.buildRequestCustomAction(params)).then(
@@ -265,11 +430,25 @@ export default class Client {
     })
   }
 
-  //Allow requests not necessarily in JSON API.
+  /**
+   * Allow requests not necessarily in JSON API.
+   * @param {object} request - axios valid request.
+   */
   customRequest(request){
     return axios(request)
   }
 
+  /**
+   * @private
+   * Convert JSON:API data into its correspondent JS models.
+   * @param {object} rawData
+   * @param {object} rawData.data - JSON:API data field with attributes and
+   * relationships.
+   * @param {object[]} [rawData.included] - JSON:API included related resources.
+   * @param {object} [params]
+   * @param {object} params.attributes - List of whitelisted attributes to be
+   * deserialized. Any other attribute in the JSON:API document will be ignored.
+   */
   deserialize({ data, included = [] }, params = {}){
     let obj
     let { links = {}, relationships = {}} = data
@@ -313,6 +492,15 @@ export default class Client {
     return obj
   }
 
+  /**
+   * @private
+   * Deserialize a relationship from a JSON:API object into its respective
+   * models.
+   * @param {object} elem - Related element coming from the relationship
+   * attribute.
+   * @param {object[]} included - Array of included elements coming from the
+   * server.
+   */
   deserializeRelationship(elem, included = []){
     const includedElem = _.find(
       included,
@@ -324,10 +512,20 @@ export default class Client {
     return this.deserialize({data: elem})
   }
 
-  deserializeArray({ data, links = [], included = [] }, klass){
+  /**
+   * @private
+   * @param {object} rawData
+   * @param {object[]} rawData.data - JSON:API "data" field value.
+   * @param {object[]} [rawData.links] - JSON:API "links" field. The accepted
+   * keys for pagination are "first", "last", "prev" and "next".
+   * @param {object} [params]
+   * @param {object} params.attributes - List of whitelisted attributes to be
+   * deserialized. Any other attribute in the JSON:API document will be ignored.
+   */
+  deserializeArray({ data, links = [], included = [] }, params){
     const response = (_.isArray(data))
-      ? _.map(data, elem => this.deserialize({data: elem, included}, klass))
-      : this.deserialize({data, included}, klass)
+      ? _.map(data, elem => this.deserialize({data: elem, included}, params))
+      : this.deserialize({data, included}, params)
 
     const paginationLinks = _.pick(links, 'first', 'last', 'prev', 'next')
     _.forOwn(paginationLinks, (value, key) => {
