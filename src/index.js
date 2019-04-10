@@ -1,4 +1,3 @@
-import axios from 'axios'
 import _ from 'lodash'
 import { fromJS } from 'immutable'
 import pluralize from 'pluralize'
@@ -6,12 +5,13 @@ import pluralize from 'pluralize'
 const minimumData = fromJS({ data: {} })
 
 export default class Client {
-  constructor(baseUrl, { usePlural = true, useSnakeCase = true } = {}){
+  constructor(baseUrl, { usePlural = true, useSnakeCase = true } = {}, axios){
     this.baseUrl = (baseUrl.slice(-1) === '/') ? baseUrl : baseUrl + '/'
     this.usePlural = usePlural
     this.useSnakeCase = useSnakeCase
     this.models = []
     this.headers = {'Content-Type': 'application/vnd.api+json'}
+    this.axios = axios
   }
 
   define(model){
@@ -92,7 +92,7 @@ export default class Client {
 
     if (resource) {
       if (resource.id) {
-        result.data.id = resource.id
+        result.data.id = resource.id.toString() // Msut be a string
       }
       result.data.attributes = {}
 
@@ -103,11 +103,11 @@ export default class Client {
         ) {
           if (value && _.includes(this.models, value.constructor)) {
             result.data.relationships = result.data.relationships || {}
-            result.data.relationships[property] = this.buildData({
+            result.data.relationships[_.snakeCase(property)] = this.buildData({
               resource: value
             })
           } else {
-            result.data.attributes[property] = value
+            result.data.attributes[_.snakeCase(property)] = value
           }
         }
       })
@@ -205,7 +205,7 @@ export default class Client {
   // requests without mocking the network
   find(params){
     return new Promise((resolve, reject) => {
-      axios(this.buildRequestFind(params)).then(
+      this.axios(this.buildRequestFind(params)).then(
         response => resolve(this.deserialize(response.data, params.attributes))
       ).catch(
         error => reject(error)
@@ -215,7 +215,7 @@ export default class Client {
 
   findAll(params){
     return new Promise((resolve, reject) => {
-      axios(this.buildRequestFindAll(params)).then(
+      this.axios(this.buildRequestFindAll(params)).then(
         response => resolve(this.deserializeArray(
           response.data, params.attributes
         ))
@@ -227,7 +227,7 @@ export default class Client {
 
   update(params){
     return new Promise((resolve, reject) => {
-      axios(this.buildRequestUpdate(params)).then(
+      this.axios(this.buildRequestUpdate(params)).then(
         response => resolve(this.deserialize(response.data, params.attributes))
       ).catch(
         error => reject(error)
@@ -237,7 +237,7 @@ export default class Client {
 
   create(params){
     return new Promise((resolve, reject) => {
-      axios(this.buildRequestCreate(params)).then(
+      this.axios(this.buildRequestCreate(params)).then(
         response => resolve(this.deserialize(response.data, params.attributes))
       ).catch(
         error => reject(error)
@@ -247,7 +247,7 @@ export default class Client {
 
   delete(params){
     return new Promise((resolve, reject) => {
-      axios(this.buildRequestDelete(params)).then(
+      this.axios(this.buildRequestDelete(params)).then(
         response => resolve(response.data)
       ).catch(
         error => reject(error)
@@ -257,7 +257,7 @@ export default class Client {
 
   customAction(params){
     return new Promise((resolve, reject) => {
-      axios(this.buildRequestCustomAction(params)).then(
+      this.axios(this.buildRequestCustomAction(params)).then(
         response => resolve(response.data)
       ).catch(
         error => reject(error)
@@ -267,7 +267,7 @@ export default class Client {
 
   //Allow requests not necessarily in JSON API.
   customRequest(request){
-    return axios(request)
+    return this.axios(request)
   }
 
   deserialize({ data, included = [] }, params = {}){
@@ -288,7 +288,7 @@ export default class Client {
 
     _.forEach(data.attributes, (value, key) => {
       if(!params.attributes || _.includes(params.attributes, key)) {
-        obj[key] = value
+        obj[_.camelCase(key)] = value
       }
     })
 
@@ -301,7 +301,7 @@ export default class Client {
 
     _.forEach(relationships, (value, key) => {
       if (_.has(obj, key)) {
-        obj[key] = (_.isArray(obj[key])) ?
+        obj[_.camelCase(key)] = (_.isArray(obj[key])) ?
           _.map(
             value.data,
             elem => this.deserializeRelationship(elem, included)
