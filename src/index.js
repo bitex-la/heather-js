@@ -92,7 +92,7 @@ export default class Client {
 
     if (resource) {
       if (resource.id) {
-        result.data.id = resource.id
+        result.data.id = resource.id.toString()
       }
       result.data.attributes = {}
 
